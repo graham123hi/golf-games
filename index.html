@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Golf Games</title>
+
+<!-- ── PWA: makes the app installable + offline ── -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#15803d">
+<meta name="description" content="Track golf betting games with friends — skins, nassau, and more.">
+
+<!-- iOS home-screen app -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Golf Games">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<!-- favicons -->
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<style>
+:root{
+  --accent:#15803d;--accent-mid:#16a34a;--accent-light:#f0fdf4;--accent-text:#166534;
+  --bg:#f2f2f7;--surface:#fff;--text-1:#1c1c1e;--text-2:#6b7280;--text-3:#aeaeb2;
+  --sep:rgba(0,0,0,.08);--shadow:0 1px 4px rgba(0,0,0,.07);--radius:14px;
+  --splash-a:#0a3d2e;--splash-b:#1a5d4a;
+}
+[data-theme=dark]{
+  --accent:#4ade80;--accent-mid:#22c55e;--accent-light:#052e16;--accent-text:#86efac;
+  --bg:#000;--surface:#1c1c1e;--text-1:#fff;--text-2:#aeaeb2;--text-3:#636366;
+  --sep:rgba(255,255,255,.08);--shadow:0 1px 4px rgba(0,0,0,.4);
+}
+[data-theme=sand]{
+  --accent:#92400e;--accent-mid:#b45309;--accent-light:#fef3c7;--accent-text:#78350f;
+  --bg:#fdf8f0;--surface:#fff;--text-1:#1c1801;--text-2:#78716c;--text-3:#a8a29e;
+  --sep:rgba(0,0,0,.06);--shadow:0 1px 4px rgba(0,0,0,.05);
+}
+[data-theme=ocean]{
+  --accent:#0369a1;--accent-mid:#0284c7;--accent-light:#e0f2fe;--accent-text:#0c4a6e;
+  --bg:#f0f9ff;--surface:#fff;--text-1:#0c4a6e;--text-2:#0369a1;--text-3:#7dd3fc;
+  --sep:rgba(0,0,0,.06);--shadow:0 1px 4px rgba(0,0,0,.05);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#e5e5ea;display:flex;justify-content:center;min-height:100dvh}
+@media(min-width:500px){body{align-items:center;padding:32px 0}}
+
+.app{width:100%;max-width:430px;height:100dvh;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;transition:background .3s}
+@media(min-width:500px){.app{height:88dvh;border-radius:44px;box-shadow:0 40px 100px rgba(0,0,0,.3),0 0 0 1px rgba(0,0,0,.06)}}
+
+/* ── View system ── */
+.vc{flex:1;position:relative;overflow:hidden}
+.view{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg);overflow:hidden;opacity:0;transition:opacity .22s ease}
+.view.visible{display:flex}
+.view.active{opacity:1}
+.overlay{transform:translateY(24px);transition:opacity .25s ease,transform .28s cubic-bezier(.2,0,0,1)}
+.overlay.active{transform:translateY(0)}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ── Splash ── */
+#view-splash{background:var(--splash-a);z-index:50}
+.splash-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.35}
+.splash-content{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;padding:40px}
+.splash-title{font-size:44px;font-weight:900;letter-spacing:-1.5px;color:#fff;text-align:center}
+.splash-sub{font-size:16px;color:rgba(255,255,255,.7);font-weight:400;text-align:center}
+.splash-loader{width:36px;height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin-top:8px;overflow:hidden}
+.splash-loader-bar{height:100%;background:#fff;border-radius:2px;animation:load 2.4s ease forwards}
+@keyframes load{from{width:0}to{width:100%}}
+
+/* ── Auth ── */
+.auth-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:var(--bg)}
+.auth-logo{font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--accent);margin-bottom:12px}
+.auth-title{font-size:28px;font-weight:800;color:var(--text-1);margin-bottom:6px;text-align:center}
+.auth-sub{font-size:15px;color:var(--text-2);margin-bottom:36px;text-align:center}
+.auth-form{width:100%;display:flex;flex-direction:column;gap:10px}
+.auth-input{width:100%;padding:14px 16px;background:var(--surface);border:2px solid transparent;border-radius:12px;font-size:16px;color:var(--text-1);outline:none;transition:border-color .15s;box-shadow:var(--shadow)}
+.auth-input:focus{border-color:var(--accent)}
+.auth-input::placeholder{color:var(--text-3)}
+.auth-btn{width:100%;padding:15px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;transition:opacity .15s}
+.auth-btn:active{opacity:.8}
+.auth-btn.secondary{background:var(--surface);color:var(--accent);box-shadow:var(--shadow)}
+.auth-switch{font-size:14px;color:var(--text-2);text-align:center;margin-top:16px;cursor:pointer}
+.auth-switch span{color:var(--accent);font-weight:600}
+.auth-err{font-size:13px;color:#ef4444;text-align:center;min-height:16px}
+.auth-back{align-self:flex-start;background:none;border:none;font-size:26px;color:var(--accent);cursor:pointer;font-weight:300;padding:0 0 16px}
+
+/* ── Tab bar (icon-only) ── */
+.tab-bar{background:var(--surface);border-top:1px solid var(--sep);display:flex;justify-content:space-around;padding:10px 0 22px;flex-shrink:0}
+.tab{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-3);padding:6px 0;transition:color .18s}
+.tab.active{color:var(--accent)}
+.tab svg{width:26px;height:26px;fill:currentColor}
+
+/* ── Hero ── */
+.hero{position:relative;height:200px;flex-shrink:0}
+.hero img{width:100%;height:100%;object-fit:cover;object-position:center 60%;display:block}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.08) 0%,rgba(0,0,0,.55) 100%)}
+.hero-chips{position:absolute;top:14px;right:16px;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:700;color:#fff}
+.hero-text{position:absolute;bottom:18px;left:20px}
+.hero-text h1{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.4px}
+.hero-text p{font-size:13px;color:rgba(255,255,255,.75);margin-top:2px}
+
+/* ── Home surface ── */
+.surface{background:var(--surface);border-radius:20px 20px 0 0;margin-top:-16px;padding:20px 20px 24px}
+.chips-row{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:22px}
+.chips-row::-webkit-scrollbar{display:none}
+.chip-pill{background:var(--accent-light);color:var(--accent-text);font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;white-space:nowrap;flex-shrink:0}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-3);margin-bottom:4px}
+.heading{font-size:22px;font-weight:700;color:var(--text-1);margin-bottom:16px}
+
+/* ── Game cards ── */
+.game-list{display:flex;flex-direction:column;gap:10px}
+.gcard{background:var(--surface);border-radius:var(--radius);padding:16px 16px 14px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
+.gi{flex:1;min-width:0}
+.gname{font-size:16px;font-weight:600;color:var(--text-1);margin-bottom:2px}
+.gdesc{font-size:13px;color:var(--text-2);margin-bottom:8px}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--bg);color:var(--text-2)}
+.tag.easy{background:var(--accent-light);color:var(--accent-text)}
+.tag.medium{background:#fffbeb;color:#b45309}
+.tag.spicy{background:#fff1f2;color:#be123c}
+.setup-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 15px;font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0;transition:opacity .15s}
+.setup-btn:active{opacity:.75}
+
+/* ── Shared nav header ── */
+.nav-hdr{background:var(--surface);border-bottom:1px solid var(--sep);padding:52px 20px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.back-btn{background:none;border:none;color:var(--accent);font-size:28px;cursor:pointer;line-height:1;padding:0 6px 0 0;font-weight:300}
+.nav-hdr-text h2{font-size:18px;font-weight:700;color:var(--text-1)}
+.nav-hdr-text p{font-size:13px;color:var(--text-2);margin-top:1px}
+
+/* ── Setup view ── */
+.setup-scroll{background:var(--bg);padding:16px 16px 40px;display:flex;flex-direction:column;gap:12px}
+.game-banner{height:140px;border-radius:var(--radius);overflow:hidden;position:relative;flex-shrink:0}
+.game-banner img{width:100%;height:100%;object-fit:cover}
+.banner-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.banner-emoji{font-size:40px}
+.banner-label{font-size:20px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+
+.block{background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.block-title{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-3);padding:16px 16px 10px}
+.block p{font-size:14px;color:var(--text-1);line-height:1.65;padding:0 16px 18px;opacity:.85}
+.opt-row{padding:14px 16px;border-top:1px solid var(--sep)}
+.opt-name{font-size:15px;font-weight:600;color:var(--text-1);margin-bottom:12px}
+
+/* YouTube card */
+.yt-card{display:flex;align-items:center;gap:12px;text-decoration:none;background:var(--surface);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.yt-thumb{width:54px;height:38px;background:#ff0000;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.yt-thumb svg{fill:#fff;width:20px;height:20px}
+.yt-info{flex:1}
+.yt-title{font-size:14px;font-weight:600;color:var(--text-1)}
+.yt-sub{font-size:12px;color:var(--text-2);margin-top:2px}
+
+/* Segment */
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:2px;gap:2px}
+.seg-btn{flex:1;padding:8px;border:none;background:transparent;border-radius:8px;font-size:14px;font-weight:600;color:var(--text-2);cursor:pointer;transition:all .18s}
+.seg-btn.on{background:var(--surface);color:var(--text-1);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+
+/* Stepper */
+.stepper{display:flex;align-items:center;gap:20px}
+.step-btn{width:34px;height:34px;border-radius:50%;border:none;background:var(--bg);font-size:20px;color:var(--text-1);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:background .15s}
+.step-btn:disabled{color:var(--text-3);cursor:default}
+.step-val{font-size:24px;font-weight:700;color:var(--text-1);min-width:28px;text-align:center}
+.step-note{font-size:13px;color:var(--text-2)}
+
+/* Bet tiles */
+.bet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.bet-tile{padding:11px 4px;background:var(--bg);border:2px solid transparent;border-radius:10px;font-size:15px;font-weight:700;color:var(--text-1);cursor:pointer;text-align:center;transition:all .15s}
+.bet-tile.on{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
+.bet-input{width:100%;padding:11px 14px;background:var(--bg);border:2px solid transparent;border-radius:10px;font-size:15px;font-weight:600;color:var(--text-1);outline:none;transition:border-color .15s}
+.bet-input:focus{border-color:var(--accent);background:var(--surface)}
+.bet-input::placeholder{color:var(--text-3);font-weight:400}
+.pname-input{width:100%;padding:11px 14px;background:var(--bg);border:2px solid transparent;border-radius:10px;font-size:14px;color:var(--text-1);outline:none;margin-bottom:8px;transition:border-color .15s}
+.pname-input:focus{border-color:var(--accent);background:var(--surface)}
+.primary-btn{width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.primary-btn:active{opacity:.8}
+
+/* ── Play view ── */
+.play-hdr{background:var(--accent);padding:48px 20px 16px;flex-shrink:0}
+.play-hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.play-hdr-top h2{font-size:17px;font-weight:700;color:#fff}
+.end-btn{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:13px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer}
+.hole-info{display:flex;align-items:center;gap:14px}
+.hole-big{font-size:28px;font-weight:800;color:#fff}
+.hole-sub{font-size:13px;color:rgba(255,255,255,.75)}
+.hole-dots{display:flex;gap:4px;margin-left:auto}
+.hdot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);transition:background .2s}
+.hdot.done{background:#4ade80}.hdot.cur{background:#fff}
+
+.play-body{background:var(--bg);padding:12px 16px 32px;flex:1;overflow-y:auto;scrollbar-width:none}
+.play-body::-webkit-scrollbar{display:none}
+.score-cards{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.score-card{background:var(--surface);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.score-avatar{width:38px;height:38px;border-radius:50%;background:var(--accent-light);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.score-avatar img{width:100%;height:100%;object-fit:cover}
+.score-info{flex:1}
+.score-pname{font-size:15px;font-weight:600;color:var(--text-1)}
+.score-stat{font-size:12px;color:var(--text-2);margin-top:1px}
+.score-input{width:60px;height:44px;border-radius:10px;border:2px solid var(--bg);background:var(--bg);font-size:22px;font-weight:700;color:var(--text-1);text-align:center;outline:none;transition:border-color .15s}
+.score-input:focus{border-color:var(--accent);background:var(--surface)}
+
+.gstat-card{background:var(--surface);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.gstat-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);margin-bottom:10px}
+.gstat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.gstat-label{font-size:13px;color:var(--text-1)}
+.gstat-val{font-size:14px;font-weight:700;color:var(--accent)}
+.hole-nav{display:flex;gap:10px}
+.hnav-btn{flex:1;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.hnav-prev{background:var(--surface);color:var(--text-1);box-shadow:var(--shadow)}
+.hnav-next{background:var(--accent);color:#fff}
+
+/* ── Summary ── */
+.sum-hdr{background:var(--accent);padding:60px 20px 28px;text-align:center;flex-shrink:0}
+.sum-trophy{font-size:56px;margin-bottom:10px}
+.sum-hdr h2{font-size:22px;font-weight:800;color:#fff}
+.sum-hdr p{font-size:14px;color:rgba(255,255,255,.8);margin-top:4px}
+.sum-body{padding:16px;display:flex;flex-direction:column;gap:10px}
+.result-card{background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.result-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--sep)}
+.result-row:last-child{border-bottom:none}
+.result-rank{width:24px;font-size:14px;font-weight:700;color:var(--text-3);text-align:center}
+.result-name{flex:1;font-size:15px;font-weight:600;color:var(--text-1)}
+.result-chips{font-size:15px;font-weight:700}
+.pos{color:#15803d}.neg{color:#ef4444}
+.sum-actions{display:flex;gap:10px}
+.sec-btn{flex:1;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;background:var(--surface);color:var(--text-1);box-shadow:var(--shadow)}
+
+/* ── Leaderboard ── */
+.lb-hdr{background:var(--surface);padding:52px 20px 0;flex-shrink:0}
+.lb-hdr h2{font-size:22px;font-weight:700;color:var(--text-1);margin-bottom:14px}
+.filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.filter-btn{padding:7px 14px;border-radius:20px;border:none;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;background:var(--bg);color:var(--text-2);transition:all .15s}
+.filter-btn.on{background:var(--accent);color:#fff}
+.lb-body{padding:14px 16px 24px;display:flex;flex-direction:column;gap:8px}
+.lb-card{background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.lb-col-hdr{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid var(--sep)}
+.lb-col-hdr span{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-3)}
+.lbc-stat,.lbc-extra{min-width:60px;text-align:right;margin-left:auto}
+.lbc-extra{margin-left:12px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--sep)}
+.lb-row:last-child{border-bottom:none}
+.lb-rank{width:22px;font-size:14px;font-weight:700;color:var(--text-3);text-align:center;flex-shrink:0}
+.g1{color:#f59e0b}.g2{color:#9ca3af}.g3{color:#b45309}
+.lb-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent-light);font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.lb-avatar img{width:100%;height:100%;object-fit:cover}
+.lb-name{flex:1;font-size:14px;font-weight:600;color:var(--text-1)}
+.lb-stat{min-width:60px;text-align:right;font-size:14px;font-weight:700;color:var(--accent)}
+.lb-extra{min-width:60px;text-align:right;font-size:13px;color:var(--text-2)}
+
+/* ── Friends ── */
+.fr-hdr{background:var(--surface);padding:52px 20px 14px;flex-shrink:0;border-bottom:1px solid var(--sep)}
+.fr-hdr h2{font-size:22px;font-weight:700;color:var(--text-1);margin-bottom:12px}
+.search-bar{width:100%;padding:11px 16px;background:var(--bg);border:none;border-radius:12px;font-size:15px;color:var(--text-1);outline:none}
+.search-bar::placeholder{color:var(--text-3)}
+.fr-body{padding:14px 16px 24px;display:flex;flex-direction:column;gap:10px}
+.fr-section-lbl{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-3);margin-bottom:2px}
+.fr-add-id-row{background:var(--surface);border-radius:var(--radius);padding:14px 16px;display:flex;gap:8px;box-shadow:var(--shadow)}
+.fr-add-id-row input{flex:1;background:var(--bg);border:2px solid transparent;border-radius:8px;padding:9px 12px;font-size:14px;color:var(--text-1);outline:none;transition:border-color .15s}
+.fr-add-id-row input:focus{border-color:var(--accent)}
+.fr-add-id-row input::placeholder{color:var(--text-3)}
+.fr-add-id-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:0 14px;font-size:14px;font-weight:600;cursor:pointer}
+.friend-card{background:var(--surface);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.fr-avatar{width:44px;height:44px;border-radius:50%;background:var(--accent-light);font-size:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden}
+.fr-avatar img{width:100%;height:100%;object-fit:cover}
+.online-dot{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid var(--surface)}
+.fr-info{flex:1}
+.fr-name{font-size:15px;font-weight:600;color:var(--text-1)}
+.fr-handle{font-size:12px;color:var(--text-2);margin-top:1px}
+.fr-stats{font-size:12px;color:var(--text-2);margin-top:3px}
+.fr-chips{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:4px 10px;border-radius:8px}
+.add-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.rm-btn{background:var(--bg);color:var(--text-2);border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.fr-id-badge{background:var(--accent-light);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.fr-id-text{font-size:13px;color:var(--text-2)}
+.fr-id-val{font-size:15px;font-weight:700;color:var(--accent);letter-spacing:1px}
+.fr-id-copy{background:none;border:none;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer}
+
+/* ── Rounds ── */
+.sc-hdr{background:var(--surface);padding:52px 20px 14px;flex-shrink:0;border-bottom:1px solid var(--sep)}
+.sc-hdr h2{font-size:22px;font-weight:700;color:var(--text-1);margin-bottom:4px}
+.sc-hdr p{font-size:13px;color:var(--text-2)}
+.sc-body{padding:14px 16px 24px;display:flex;flex-direction:column;gap:10px}
+.round-card{background:var(--surface);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.round-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.round-game{font-size:15px;font-weight:700;color:var(--text-1)}
+.round-date{font-size:12px;color:var(--text-3)}
+.round-detail{font-size:13px;color:var(--text-2);margin-bottom:10px}
+.round-result{display:flex;justify-content:space-between;align-items:center}
+.round-winner{font-size:13px;color:var(--text-2)}
+.round-chips{font-size:14px;font-weight:700}
+.empty-state{text-align:center;padding:60px 20px}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-msg{font-size:16px;font-weight:600;color:var(--text-2);margin-bottom:6px}
+.empty-sub{font-size:14px;color:var(--text-3)}
+
+/* ── Profile ── */
+.pr-hdr{background:var(--accent);padding:52px 20px 24px;flex-shrink:0}
+.pr-photo-area{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.pr-photo-wrap{position:relative;cursor:pointer;width:76px;height:76px;flex-shrink:0}
+.pr-photo-wrap img,.pr-photo-wrap .pr-emoji{width:76px;height:76px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:36px;background:rgba(255,255,255,.2)}
+.pr-photo-cam{position:absolute;bottom:0;right:0;width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.pr-photo-cam svg{width:14px;height:14px;fill:var(--accent)}
+.pr-name-block h2{font-size:20px;font-weight:800;color:#fff}
+.pr-name-block p{font-size:13px;color:rgba(255,255,255,.7);margin-top:2px}
+.pr-id-row{background:rgba(240, 235, 235, 0.15);border-radius:8px;padding:6px 12px;display:flex;align-items:center;justify-content:space-between;margin-top:6px;cursor:pointer}
+.pr-id-label{font-size:11px;color:rgba(255,255,255,.6)}
+.pr-id-value{font-size:13px;font-weight:700;color:#fff;letter-spacing:.5px}
+.pr-stats-row{display:flex;gap:12px}
+.pr-stat{background:rgba(255,255,255,.15);border-radius:12px;padding:10px 16px;flex:1;text-align:center}
+.pr-stat-num{font-size:20px;font-weight:800;color:#fff}
+.pr-stat-lbl{font-size:11px;color:rgba(255,255,255,.7);margin-top:1px}
+
+.pr-body{padding:16px;display:flex;flex-direction:column;gap:12px}
+.pr-block{background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.pr-field{padding:14px 16px;border-bottom:1px solid var(--sep);display:flex;flex-direction:column;gap:4px}
+.pr-field:last-child{border-bottom:none}
+.pr-label{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-3)}
+.pr-input{font-size:15px;color:var(--text-1);background:none;border:none;outline:none;width:100%;font-family:inherit}
+.pr-input::placeholder{color:var(--text-3)}
+
+/* Avatar picker (inside profile body) */
+.av-picker{background:var(--surface);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.av-picker-title{font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:12px}
+.av-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.av-btn{font-size:26px;width:44px;height:44px;border:2px solid transparent;border-radius:10px;cursor:pointer;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:all .15s}
+.av-btn.on{border-color:var(--accent);background:var(--accent-light)}
+
+/* Handicap calculator */
+.hc-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.hc-input{flex:1;padding:9px 12px;background:var(--bg);border:2px solid transparent;border-radius:8px;font-size:14px;color:var(--text-1);outline:none;transition:border-color .15s;text-align:center}
+.hc-input:focus{border-color:var(--accent)}
+.hc-input::placeholder{color:var(--text-3);font-size:12px}
+.hc-add-btn{background:var(--accent-light);color:var(--accent);border:none;border-radius:8px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer}
+.hc-result{background:var(--accent-light);border-radius:10px;padding:14px 16px;margin-top:4px;display:flex;justify-content:space-between;align-items:center}
+.hc-result-label{font-size:13px;color:var(--accent-text)}
+.hc-result-val{font-size:22px;font-weight:800;color:var(--accent)}
+.hc-round-item{display:flex;justify-content:space-between;font-size:13px;color:var(--text-2);padding:6px 0;border-bottom:1px solid var(--sep)}
+.hc-round-item:last-child{border-bottom:none}
+.hc-round-diff{font-weight:600;color:var(--text-1)}
+.hc-rm{background:none;border:none;color:#ef4444;font-size:18px;cursor:pointer;padding:0 0 0 8px}
+
+/* Theme swatches */
+.theme-row{display:flex;gap:10px;padding:14px 16px}
+.swatch{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;flex:1}
+.swatch-dot{width:32px;height:32px;border-radius:50%;border:3px solid transparent;transition:all .18s}
+.swatch.on .swatch-dot{border-color:var(--text-1);transform:scale(1.1)}
+.swatch-lbl{font-size:11px;color:var(--text-2);font-weight:500}
+
+/* Logout */
+.logout-btn{width:100%;padding:15px;background:var(--surface);color:#ef4444;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
+
+/* ── Create Game view ── */
+.cg-hdr{background:var(--surface);padding:52px 20px 14px;flex-shrink:0;border-bottom:1px solid var(--sep)}
+.cg-hdr h2{font-size:22px;font-weight:700;color:var(--text-1);margin-bottom:4px}
+.cg-hdr p{font-size:13px;color:var(--text-2)}
+.cg-body{padding:14px 16px 32px;display:flex;flex-direction:column;gap:12px}
+.cg-textarea{width:100%;padding:12px 14px;background:var(--bg);border:2px solid transparent;border-radius:10px;font-size:14px;color:var(--text-1);outline:none;resize:none;font-family:inherit;line-height:1.55;transition:border-color .15s;min-height:100px}
+.cg-textarea:focus{border-color:var(--accent)}
+.cg-textarea::placeholder{color:var(--text-3)}
+.color-grid{display:flex;gap:8px;flex-wrap:wrap;padding:4px 0}
+.color-swatch{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0}
+.color-swatch.on{border-color:var(--text-1);transform:scale(1.15)}
+.custom-badge{font-size:10px;font-weight:700;letter-spacing:.5px;background:var(--accent-light);color:var(--accent-text);padding:2px 7px;border-radius:6px;text-transform:uppercase;vertical-align:middle}
+.cg-card{background:var(--surface);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow)}
+.cg-card-info{flex:1;min-width:0}
+.cg-card-name{font-size:15px;font-weight:700;color:var(--text-1);margin-bottom:2px}
+.cg-card-desc{font-size:13px;color:var(--text-2);margin-bottom:6px}
+.cg-card-actions{display:flex;gap:8px;flex-shrink:0}
+.cg-del-btn{background:var(--bg);color:#ef4444;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.cg-play-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer}
+
+/* Leaderboard sidebar */
+.lb-content{flex:1;display:flex;overflow:hidden}
+.lb-sidebar{width:90px;flex-shrink:0;overflow-y:auto;background:var(--surface);border-right:1px solid var(--sep);display:flex;flex-direction:column;padding:6px 0;scrollbar-width:none}
+.lb-sidebar::-webkit-scrollbar{display:none}
+.lb-side-btn{padding:12px 6px;font-size:10px;font-weight:700;letter-spacing:.3px;text-align:center;color:var(--text-2);cursor:pointer;border-left:3px solid transparent;line-height:1.35;transition:all .15s}
+.lb-side-btn.on{color:var(--accent);border-left-color:var(--accent);background:var(--accent-light)}
+.lb-main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.lb-main .scroll{padding:12px 12px 24px}
+
+/* Home description + images */
+.home-about{padding:0 0 20px}
+.home-desc{font-size:14px;color:var(--text-2);line-height:1.65;margin-bottom:16px}
+.home-imgs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+.home-img-slot{height:110px;border-radius:var(--radius);overflow:hidden;position:relative;background:var(--bg);cursor:pointer;border:2px dashed var(--sep)}
+.home-img-slot img{width:100%;height:100%;object-fit:cover;display:block}
+.home-img-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.home-img-ph svg{fill:var(--text-3);width:24px;height:24px}
+.home-img-ph span{font-size:12px;color:var(--text-3);font-weight:500}
+
+/* Favorites */
+.fav-btn{background:none;border:none;cursor:pointer;padding:6px 4px;color:var(--text-3);font-size:18px;line-height:1;flex-shrink:0;transition:color .15s}
+.fav-btn.on{color:#ef4444}
+
+/* Home section headings */
+.home-sec-lbl{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-3);margin-bottom:4px;margin-top:24px}
+.home-sec-title{font-size:20px;font-weight:700;color:var(--text-1);margin-bottom:14px}
+.home-appearance{background:var(--bg);border-radius:var(--radius);margin-top:24px}
+.home-appearance-lbl{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-3);padding:14px 16px 0}
+
+/* Settings overlay */
+.settings-gear{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:4px;margin-left:auto;display:flex;align-items:center}
+.settings-gear svg{width:22px;height:22px;fill:currentColor}
+.settings-gear:hover{color:#fff}
+.pr-name-top{display:flex;align-items:center;gap:4px}
+
+/* Payment section */
+.pay-section{background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.pay-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--sep)}
+.pay-row:last-child{border-bottom:none}
+.pay-brand{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
+.venmo-brand{background:#008cff}
+.cash-brand{background:#00c244}
+.zelle-brand{background:#6d1ed4}
+.pay-info{flex:1;min-width:0}
+.pay-platform{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3)}
+.pay-handle{font-size:14px;font-weight:600;color:var(--text-1);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pay-handle.empty{color:var(--text-3);font-weight:400;font-style:italic}
+.pay-actions{display:flex;gap:6px;flex-shrink:0}
+.pay-open{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.pay-copy{background:var(--bg);color:var(--text-1);border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<!-- ═══════ VIEW CONTAINER ═══════ -->
+<div class="vc" id="vc">
+
+<!-- SPLASH -->
+<div class="view visible active" id="view-splash" style="z-index:50;background:var(--splash-a)">
+  <img class="splash-img" src="https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?auto=format&fit=crop&w=900&q=80" alt="" onerror="this.style.display='none'">
+  <div class="splash-content">
+    <div class="splash-title">Golf Games</div>
+    <div class="splash-sub">Play smarter. Win more.</div>
+    <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+  </div>
+</div>
+
+<!-- AUTH WELCOME -->
+<div class="view" id="view-auth-welcome">
+  <div class="auth-wrap">
+    <div class="auth-logo">GG</div>
+    <div class="auth-title">Golf Games</div>
+    <div class="auth-sub">Rules, scorecards &amp; virtual chips</div>
+    <div class="auth-form">
+      <button class="auth-btn" onclick="goAuth('signup')">Create Account</button>
+      <button class="auth-btn secondary" onclick="goAuth('signin')">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH SIGN IN -->
+<div class="view" id="view-auth-signin">
+  <div class="auth-wrap">
+    <button class="auth-back" onclick="goAuth('welcome')">‹</button>
+    <div class="auth-logo">GG</div>
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-sub">Sign in to your account</div>
+    <div class="auth-form">
+      <input class="auth-input" id="si-user" type="text" placeholder="Username" autocapitalize="none">
+      <input class="auth-input" id="si-pass" type="password" placeholder="Password">
+      <div class="auth-err" id="si-err"></div>
+      <button class="auth-btn" onclick="doSignIn()">Sign In</button>
+    </div>
+    <div class="auth-switch" onclick="goAuth('signup')">No account? <span>Create one</span></div>
+  </div>
+</div>
+
+<!-- AUTH SIGN UP -->
+<div class="view" id="view-auth-signup">
+  <div class="auth-wrap" style="overflow-y:auto">
+    <button class="auth-back" onclick="goAuth('welcome')">‹</button>
+    <div class="auth-logo">GG</div>
+    <div class="auth-title">Create Account</div>
+    <div class="auth-sub">Join the game</div>
+    <div class="auth-form">
+      <input class="auth-input" id="su-name" type="text" placeholder="Full name">
+      <input class="auth-input" id="su-user" type="text" placeholder="Username (no spaces)" autocapitalize="none">
+      <input class="auth-input" id="su-email" type="email" placeholder="Email (optional)">
+      <input class="auth-input" id="su-pass" type="password" placeholder="Password">
+      <div class="auth-err" id="su-err"></div>
+      <button class="auth-btn" onclick="doSignUp()">Create Account</button>
+    </div>
+    <div class="auth-switch" onclick="goAuth('signin')">Already have one? <span>Sign in</span></div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="view" id="view-home">
+  <div class="scroll">
+    <div class="hero">
+      <img src="https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?auto=format&fit=crop&w=900&q=80" alt="Golf course" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(160deg,#0a3d2e,#1a6b40)'">
+      <div class="hero-overlay"></div>
+      <div class="hero-chips" id="chip-display">1,000 chips</div>
+      <div class="hero-text"><h1>Golf Games</h1><p>Rules, scorecards &amp; live scoring</p></div>
+    </div>
+    <div class="surface">
+      <!-- About -->
+      <div class="home-about">
+        <div class="home-desc">Pick a betting game, get the full rules and a live scorecard, and settle up with chip totals and payment handles right in the app. No house money — just bragging rights.</div>
+        <div class="home-imgs" id="home-imgs">
+          <div class="home-img-slot" id="hi0" onclick="document.getElementById('hf0').click()">
+            <div class="home-img-ph"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Add photo</span></div>
+            <input type="file" id="hf0" accept="image/*" style="display:none" onchange="handleHomeImg(this,0)">
+          </div>
+          <div class="home-img-slot" id="hi1" onclick="document.getElementById('hf1').click()">
+            <div class="home-img-ph"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>Add photo</span></div>
+            <input type="file" id="hf1" accept="image/*" style="display:none" onchange="handleHomeImg(this,1)">
+          </div>
+        </div>
+      </div>
+      <!-- Favorite games -->
+      <div id="fav-section" style="display:none">
+        <div class="home-sec-lbl">Favorites</div>
+        <div class="home-sec-title">Quick Access</div>
+        <div class="game-list" id="fav-list"></div>
+      </div>
+      <!-- All games -->
+      <div class="home-sec-lbl" id="all-games-lbl">Game Catalog</div>
+      <div class="home-sec-title">All Games</div>
+      <div class="game-list" id="game-list"></div>
+      <!-- Appearance -->
+      <div class="home-appearance">
+        <div class="home-appearance-lbl">Appearance</div>
+        <div class="theme-row" id="home-theme-row">
+          <div class="swatch on" id="sw-" onclick="setTheme('')"><div class="swatch-dot" style="background:linear-gradient(135deg,#15803d,#0a3d2e)"></div><div class="swatch-lbl">Classic</div></div>
+          <div class="swatch" id="sw-dark" onclick="setTheme('dark')"><div class="swatch-dot" style="background:linear-gradient(135deg,#1c1c1e,#000)"></div><div class="swatch-lbl">Dark</div></div>
+          <div class="swatch" id="sw-sand" onclick="setTheme('sand')"><div class="swatch-dot" style="background:linear-gradient(135deg,#b45309,#fef3c7)"></div><div class="swatch-lbl">Sand</div></div>
+          <div class="swatch" id="sw-ocean" onclick="setTheme('ocean')"><div class="swatch-dot" style="background:linear-gradient(135deg,#0369a1,#e0f2fe)"></div><div class="swatch-lbl">Ocean</div></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding-bottom:8px">
+        <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+  <div class="tab-bar" id="tb-home"></div>
+</div>
+
+<!-- SETUP (overlay) -->
+<div class="view overlay" id="view-setup">
+  <div class="nav-hdr">
+    <button class="back-btn" onclick="switchTab('home')">‹</button>
+    <div class="nav-hdr-text"><h2 id="s-title"></h2><p id="s-tagline"></p></div>
+  </div>
+  <div class="scroll"><div class="setup-scroll">
+    <div class="game-banner" id="s-banner">
+      <img id="s-banner-img" src="" alt="" onerror="this.style.display='none'">
+      <div class="banner-overlay" id="s-banner-overlay"></div>
+    </div>
+    <div class="block">
+      <div class="block-title">How It Works</div>
+      <p id="s-rules"></p>
+    </div>
+    <a class="yt-card" id="s-yt" href="#" target="_blank" rel="noopener">
+      <div class="yt-thumb"><svg viewBox="0 0 24 24"><path d="M19.6 3H4.4A2.4 2.4 0 002 5.4v13.2A2.4 2.4 0 004.4 21h15.2a2.4 2.4 0 002.4-2.4V5.4A2.4 2.4 0 0019.6 3zM10 15.5v-7l6 3.5-6 3.5z"/></svg></div>
+      <div class="yt-info"><div class="yt-title" id="s-yt-title"></div><div class="yt-sub">Watch on YouTube →</div></div>
+    </a>
+    <div class="block">
+      <div class="opt-row">
+        <div class="opt-name">Round Length</div>
+        <div class="seg"><button class="seg-btn on" id="btn9" onclick="selHoles(9)">9 Holes</button><button class="seg-btn" id="btn18" onclick="selHoles(18)">18 Holes</button></div>
+      </div>
+      <div class="opt-row">
+        <div class="opt-name">Players</div>
+        <div class="stepper">
+          <button class="step-btn" id="sbminus" onclick="chgP(-1)">−</button>
+          <span class="step-val" id="scount">4</span>
+          <button class="step-btn" id="sbplus" onclick="chgP(1)">+</button>
+          <span class="step-note" id="snote">players</span>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="opt-name">Chips Per Hole</div>
+        <div class="bet-grid">
+          <div class="bet-tile on" onclick="selBet(this,5)">5</div>
+          <div class="bet-tile" onclick="selBet(this,10)">10</div>
+          <div class="bet-tile" onclick="selBet(this,25)">25</div>
+          <div class="bet-tile" onclick="selBet(this,50)">50</div>
+        </div>
+        <input class="bet-input" id="custom-bet" type="number" min="1" placeholder="Custom amount…" oninput="onCustomBet(this)">
+      </div>
+      <div class="opt-row">
+        <div class="opt-name">Player Names</div>
+        <div id="pname-inputs"></div>
+      </div>
+    </div>
+    <button class="primary-btn" onclick="startRound()">Start Round →</button>
+  </div></div>
+</div>
+
+<!-- PLAY (overlay) -->
+<div class="view overlay" id="view-play">
+  <div class="play-hdr">
+    <div class="play-hdr-top"><h2 id="p-gname"></h2><button class="end-btn" onclick="endRound()">End Round</button></div>
+    <div class="hole-info">
+      <div><div class="hole-big">Hole <span id="p-hnum">1</span></div><div class="hole-sub">Par <span id="p-par">4</span> · <span id="p-left"></span> left</div></div>
+      <div class="hole-dots" id="hole-dots"></div>
+    </div>
+  </div>
+  <div class="play-body">
+    <div class="score-cards" id="score-cards"></div>
+    <div class="gstat-card"><div class="gstat-title">Live Standings</div><div id="gstat-rows"></div></div>
+    <div class="hole-nav">
+      <button class="hnav-btn hnav-prev" onclick="prevHole()">← Prev</button>
+      <button class="hnav-btn hnav-next" onclick="nextHole()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY (overlay) -->
+<div class="view overlay" id="view-summary">
+  <div class="scroll">
+    <div class="sum-hdr"><h2 id="sum-winner"></h2><p id="sum-sub"></p></div>
+    <div class="sum-body">
+      <div class="result-card" id="sum-results"></div>
+      <div class="sum-actions">
+        <button class="sec-btn" onclick="switchTab('home')">Home</button>
+        <button class="primary-btn" style="flex:1" onclick="replayRound()">Play Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="view" id="view-leaderboard">
+  <div class="lb-hdr"><h2>Leaderboard</h2></div>
+  <div class="lb-content">
+    <div class="lb-sidebar" id="lb-sidebar"></div>
+    <div class="lb-main"><div class="scroll"><div class="lb-body" id="lb-body"></div></div></div>
+  </div>
+  <div class="tab-bar" id="tb-leaderboard"></div>
+</div>
+
+<!-- FRIENDS -->
+<div class="view" id="view-friends">
+  <div class="fr-hdr"><h2>Friends</h2><input class="search-bar" placeholder="Search name or @handle…" oninput="filterFriends(this.value)"></div>
+  <div class="scroll"><div class="fr-body" id="fr-body"></div></div>
+  <div class="tab-bar" id="tb-friends"></div>
+</div>
+
+<!-- ROUNDS -->
+<div class="view" id="view-scores">
+  <div class="sc-hdr"><h2>Round History</h2><p>Your completed rounds</p></div>
+  <div class="scroll"><div class="sc-body" id="sc-body"></div></div>
+  <div class="tab-bar" id="tb-scores"></div>
+</div>
+
+<!-- PROFILE -->
+<div class="view" id="view-profile">
+  <div class="pr-hdr">
+    <div class="pr-photo-area">
+      <div class="pr-photo-wrap" onclick="document.getElementById('photo-file').click()">
+        <img id="pr-photo-img" src="" alt="" style="display:none">
+        <div class="pr-emoji" id="pr-emoji"></div>
+        <div class="pr-photo-cam"><svg viewBox="0 0 24 24"><path d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4zm0-8.4a5.2 5.2 0 1 1 0 10.4A5.2 5.2 0 0 1 12 6.8zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg></div>
+      </div>
+      <input type="file" id="photo-file" accept="image/*" style="display:none" onchange="handlePhoto(this)">
+      <div class="pr-name-block">
+        <div class="pr-name-top">
+          <h2 id="pr-disp-name">Your Name</h2>
+          <button class="settings-gear" onclick="showOverlay('settings')" title="Edit profile">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.11-.22.06-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          </button>
+        </div>
+        <p id="pr-disp-handle">@username</p>
+        <div class="pr-id-row" onclick="copyId()" title="Tap to copy">
+          <span class="pr-id-label">Your Friend ID</span>
+          <span class="pr-id-value" id="pr-id-val">GF-——</span>
+        </div>
+      </div>
+    </div>
+    <div class="pr-stats-row">
+      <div class="pr-stat"><div class="pr-stat-num" id="pr-chips">1,000</div><div class="pr-stat-lbl">Chips</div></div>
+      <div class="pr-stat"><div class="pr-stat-num" id="pr-rounds">0</div><div class="pr-stat-lbl">Rounds</div></div>
+      <div class="pr-stat"><div class="pr-stat-num" id="pr-wins">0</div><div class="pr-stat-lbl">Wins</div></div>
+    </div>
+  </div>
+  <div class="scroll"><div class="pr-body">
+    <!-- Payment info -->
+    <div class="block-title" style="padding:4px 0 10px">Receive Payments</div>
+    <div class="pay-section" id="pay-section"></div>
+    <div style="margin-top:10px;font-size:12px;color:var(--text-3);text-align:center">Tap the settings icon above to add your payment handles</div>
+  </div></div>
+  <div class="tab-bar" id="tb-profile"></div>
+</div>
+
+<!-- SETTINGS (overlay) -->
+<div class="view overlay" id="view-settings">
+  <div class="nav-hdr">
+    <button class="back-btn" onclick="closeSettings()">‹</button>
+    <div class="nav-hdr-text"><h2>Settings</h2><p>Edit your profile details</p></div>
+  </div>
+  <div class="scroll"><div class="setup-scroll">
+    <div class="block">
+      <div class="block-title">Profile</div>
+      <div class="opt-row"><div class="opt-name" style="font-size:13px;margin-bottom:8px">Full Name</div><input class="bet-input" id="st-name" type="text" placeholder="Your name" oninput="saveSettings()"></div>
+      <div class="opt-row"><div class="opt-name" style="font-size:13px;margin-bottom:8px">Username</div><input class="bet-input" id="st-handle" type="text" placeholder="@username" autocapitalize="none" oninput="saveSettings()"></div>
+      <div class="opt-row"><div class="opt-name" style="font-size:13px;margin-bottom:8px">Home Course</div><input class="bet-input" id="st-course" type="text" placeholder="e.g. Rockport Golf Club" oninput="saveSettings()"></div>
+      <div class="opt-row"><div class="opt-name" style="font-size:13px;margin-bottom:8px">GHIN Number</div><input class="bet-input" id="st-ghin" type="tel" placeholder="7-digit GHIN number" maxlength="8" oninput="saveSettings()"></div>
+    </div>
+    <div class="block">
+      <div class="block-title">Payment Handles</div>
+      <div class="opt-row"><div class="opt-name" style="font-size:13px;margin-bottom:8px">Venmo</div><input class="bet-input" id="st-venmo" type="text" placeholder="@your-venmo" autocapitalize="none" oninput="saveSettings()"></div>
+      <div class="opt-row"><div class="opt-name" style="font-size:13px;margin-bottom:8px">CashApp</div><input class="bet-input" id="st-cashapp" type="text" placeholder="$cashtag" autocapitalize="none" oninput="saveSettings()"></div>
+      <div class="opt-row"><div class="opt-name" style="font-size:13px;margin-bottom:8px">Zelle</div><input class="bet-input" id="st-zelle" type="text" placeholder="Phone or email" oninput="saveSettings()"></div>
+    </div>
+    <div class="block">
+      <div class="block-title">Handicap Calculator</div>
+      <div style="padding:0 16px 4px;font-size:12px;color:var(--text-2);line-height:1.5">Your official index lives at <strong style="color:var(--accent)">ghin.com</strong>. Enter recent scores to estimate it here.</div>
+      <div style="padding:0 16px 8px">
+        <div style="display:flex;gap:8px;margin-bottom:6px">
+          <div style="flex:1;font-size:11px;color:var(--text-3);text-align:center;font-weight:600">SCORE</div>
+          <div style="flex:1;font-size:11px;color:var(--text-3);text-align:center;font-weight:600">RATING</div>
+          <div style="flex:1;font-size:11px;color:var(--text-3);text-align:center;font-weight:600">SLOPE</div>
+          <div style="width:32px"></div>
+        </div>
+        <div id="hc-rounds-list"></div>
+        <div class="hc-row">
+          <input class="hc-input" id="hc-score" type="number" placeholder="Score" min="50" max="150">
+          <input class="hc-input" id="hc-rating" type="number" placeholder="Rating" min="60" max="80" step="0.1">
+          <input class="hc-input" id="hc-slope" type="number" placeholder="Slope" min="55" max="155">
+          <button class="hc-add-btn" onclick="addHcRound()">+</button>
+        </div>
+        <div id="hc-result-area"></div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:8px" id="st-hc-display"></div>
+      </div>
+    </div>
+  </div></div>
+</div>
+
+<!-- CREATE GAME -->
+<div class="view" id="view-create">
+  <div class="cg-hdr">
+    <h2>Create a Game</h2>
+    <p>Build your own custom betting game</p>
+  </div>
+  <div class="scroll"><div class="cg-body">
+    <div class="block">
+      <div class="block-title">Game Info</div>
+      <div class="opt-row">
+        <div class="opt-name" style="font-size:13px;margin-bottom:8px">Game Name</div>
+        <input class="bet-input" id="cg-name" type="text" placeholder="e.g. Backyard Skins" maxlength="32">
+      </div>
+      <div class="opt-row">
+        <div class="opt-name" style="font-size:13px;margin-bottom:8px">Short Description</div>
+        <input class="bet-input" id="cg-tagline" type="text" placeholder="e.g. Our group's house rules" maxlength="60">
+      </div>
+      <div class="opt-row">
+        <div class="opt-name" style="font-size:13px;margin-bottom:8px">Full Rules</div>
+        <textarea class="cg-textarea" id="cg-rules" placeholder="Explain how the game works, how to score, and how to settle up…" maxlength="600"></textarea>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-title">Setup</div>
+      <div class="opt-row">
+        <div class="opt-name">Difficulty</div>
+        <div class="seg" id="cg-diff-seg">
+          <button class="seg-btn on" onclick="setCgDiff('easy',this)">Easy</button>
+          <button class="seg-btn" onclick="setCgDiff('medium',this)">Moderate</button>
+          <button class="seg-btn" onclick="setCgDiff('spicy',this)">Spicy</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="opt-name">Min Players</div>
+        <div class="stepper">
+          <button class="step-btn" onclick="cgChgMin(-1)">−</button>
+          <span class="step-val" id="cg-min">2</span>
+          <button class="step-btn" onclick="cgChgMin(1)">+</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="opt-name">Max Players</div>
+        <div class="stepper">
+          <button class="step-btn" onclick="cgChgMax(-1)">−</button>
+          <span class="step-val" id="cg-max">4</span>
+          <button class="step-btn" onclick="cgChgMax(1)">+</button>
+        </div>
+      </div>
+      <div class="opt-row">
+        <div class="opt-name">Game Color</div>
+        <div class="color-grid" id="cg-colors"></div>
+      </div>
+    </div>
+    <button class="primary-btn" onclick="saveCustomGame()">Save Game</button>
+    <div id="cg-saved-section" style="display:none">
+      <div class="home-sec-lbl" style="margin-top:4px">My Custom Games</div>
+      <div id="cg-saved-list" style="display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
+    </div>
+  </div></div>
+  <div class="tab-bar" id="tb-create"></div>
+</div>
+
+</div><!-- .vc -->
+</div><!-- .app -->
+
+<script>
+// ═══════════════════════════
+// GAME DATA
+// ═══════════════════════════
+const PARS9=[4,4,3,4,5,3,4,4,5],PARS18=[4,4,3,4,5,3,4,4,5,4,3,4,5,4,3,5,4,4];
+const AV_COLORS=['#15803d','#1d4ed8','#dc2626','#d97706','#7c3aed','#0891b2','#374151','#92400e'];
+function initAv(name,idx){
+  const bg=AV_COLORS[(idx||0)%AV_COLORS.length];
+  const letter=(name||'?')[0].toUpperCase();
+  return`<div style="width:100%;height:100%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;border-radius:50%">${letter}</div>`;
+}
+
+const GAMES=[
+  {id:'skins',name:'Skins',tagline:'Classic hole-by-hole betting',difficulty:'easy',players:{min:2,max:6,def:4},color:'#15803d',
+   rules:'Lowest score wins the hole\'s skin. Ties carry the pot to the next hole — stacking until someone wins clean. Settle up by total skins at the end.',
+   ytSearch:'how to play skins golf game rules'},
+  {id:'nassau',name:'Nassau',tagline:'Three bets in one round',difficulty:'easy',players:{min:2,max:4,def:2},color:'#1d4ed8',
+   rules:'Front nine, back nine, and full 18 — each a separate match-play bet. Most holes won takes each segment. Press when down 2 to open a new side bet.',
+   ytSearch:'nassau golf betting game rules how to play'},
+  {id:'wolf',name:'Wolf',tagline:'Pick a partner or go lone wolf',difficulty:'medium',players:{min:4,max:4,def:4},color:'#374151',
+   rules:'One player is Wolf each hole. After each tee shot they choose a partner or go Lone Wolf (double payout). Blind Wolf before anyone hits pays triple.',
+   ytSearch:'wolf golf game how to play rules'},
+  {id:'bingo',name:'Bingo Bango Bongo',tagline:'Three points on every hole',difficulty:'easy',players:{min:2,max:6,def:4},color:'#d97706',
+   rules:'Bingo: first on the green. Bango: closest to pin when all are on. Bongo: first to hole out. Play must go farthest-out first throughout.',
+   ytSearch:'bingo bango bongo golf game rules'},
+  {id:'vegas',name:'Vegas',tagline:'Combine scores into a number',difficulty:'spicy',players:{min:4,max:4,def:4},color:'#dc2626',
+   rules:'2v2. Each team combines hole scores into a two-digit number, low digit first. Difference = chips won. Double bogey or worse flips the digits.',
+   ytSearch:'vegas golf game rules how to play'},
+  {id:'stableford',name:'Stableford',tagline:'Points per hole, not strokes',difficulty:'easy',players:{min:2,max:6,def:4},color:'#0891b2',
+   rules:'Eagle=4pts, Birdie=3, Par=2, Bogey=1, Double+= 0. Highest total wins. A blowup hole costs at most 2 points — it never ruins your round.',
+   ytSearch:'how to play stableford golf scoring'},
+  {id:'matchplay',name:'Match Play',tagline:'Win holes, not strokes',difficulty:'easy',players:{min:2,max:4,def:2},color:'#7c3aed',
+   rules:'Win the most holes to win the match. Strokes are irrelevant — track as "2 up" or "all square." Match ends when lead exceeds holes remaining.',
+   ytSearch:'match play golf rules how to play'},
+  {id:'string',name:'String',tagline:'Move your ball if you have string left',difficulty:'medium',players:{min:2,max:6,def:4},color:'#92400e',
+   rules:'Each player gets string (1 inch per handicap stroke). Use it to move your ball anywhere within the length, then cut that amount off. Lowest score wins.',
+   ytSearch:'string golf game rules handicap'},
+];
+
+const MOCK_LB={
+  skins:[{n:'Tyler K.',a:18,b:'+340'},{n:'Jordan M.',a:15,b:'+280'},{n:'Sam P.',a:12,b:'+190'},{n:'Alex R.',a:9,b:'+80'},{n:'Chris B.',a:6,b:'-40'}],
+  nassau:[{n:'Jordan M.',a:22,b:'+580'},{n:'Tyler K.',a:19,b:'+420'},{n:'Sam P.',a:11,b:'-60'},{n:'Alex R.',a:8,b:'-280'},{n:'Chris B.',a:5,b:'-400'}],
+  wolf:[{n:'Alex R.',a:248,b:'71%'},{n:'Tyler K.',a:220,b:'58%'},{n:'Jordan M.',a:195,b:'44%'},{n:'Sam P.',a:110,b:'25%'},{n:'Chris B.',a:88,b:'20%'}],
+  bingo:[{n:'Sam P.',a:312,b:'18'},{n:'Tyler K.',a:288,b:'17'},{n:'Jordan M.',a:198,b:'13'},{n:'Alex R.',a:155,b:'11'},{n:'Chris B.',a:122,b:'10'}],
+  vegas:[{n:'Tyler K.',a:14,b:'+920'},{n:'Alex R.',a:12,b:'+680'},{n:'Sam P.',a:10,b:'+240'},{n:'Jordan M.',a:8,b:'-180'},{n:'Chris B.',a:3,b:'-810'}],
+  stableford:[{n:'Jordan M.',a:'36.2',b:'44'},{n:'Tyler K.',a:'34.8',b:'42'},{n:'Sam P.',a:'32.1',b:'40'},{n:'Alex R.',a:'28.9',b:'36'},{n:'Chris B.',a:'24.3',b:'32'}],
+  matchplay:[{n:'Tyler K.',a:'72%',b:'26-10'},{n:'Jordan M.',a:'65%',b:'22-12'},{n:'Sam P.',a:'58%',b:'18-13'},{n:'Alex R.',a:'42%',b:'10-14'},{n:'Chris B.',a:'31%',b:'8-18'}],
+  string:[{n:'Sam P.',a:'78.2',b:'14'},{n:'Jordan M.',a:'79.8',b:'12'},{n:'Tyler K.',a:'80.4',b:'13'},{n:'Alex R.',a:'84.5',b:'9'},{n:'Chris B.',a:'87.0',b:'8'}],
+};
+const LB_COLS={skins:['Skins','Chips'],nassau:['Wins','Chips'],wolf:['Points','Lone Wolf %'],bingo:['Points','Rounds'],vegas:['Team Wins','Chips'],stableford:['Avg Pts','Best'],matchplay:['Win %','Record'],string:['Avg Score','Rounds']};
+
+const MOCK_FRIENDS=[
+  {n:'Tyler K.',handle:'@tylerk',chips:2840,online:true,wins:26,losses:10},
+  {n:'Jordan M.',handle:'@jmitch',chips:1920,online:true,wins:22,losses:12},
+  {n:'Sam P.',handle:'@samgolf',chips:1450,online:false,wins:18,losses:13},
+  {n:'Alex R.',handle:'@alexr',chips:980,online:false,wins:10,losses:14},
+  {n:'Chris B.',handle:'@cbgolf',chips:640,online:false,wins:8,losses:18},
+];
+
+// SVG paths for tab icons
+const TAB_ICONS={
+  home:'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',
+  leaderboard:'M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zM16.2 13h2.8v6h-2.8v-6z',
+  friends:'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z',
+  scores:'M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z',
+  create:'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
+  profile:'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',
+};
+const TAB_ORDER=['home','leaderboard','friends','scores','create','profile'];
+
+// ═══════════════════════════
+// STATE
+// ═══════════════════════════
+let accounts=JSON.parse(localStorage.getItem('golfAccounts'))||{};
+let currentUser=localStorage.getItem('golfCurrentUser')||null;
+let profile=null;
+let rounds=[];
+let currentGame=null,selHolesN=9,selPlayersN=4,selBetN=5;
+let playerNames=[],scores=[],currentHole=0,totalHoles=9;
+let lbGame='skins';
+let friendsAdded=new Set(['@tylerk','@jmitch','@samgolf']);
+let activeTheme=localStorage.getItem('golfTheme')||'';
+let favorites=new Set(JSON.parse(localStorage.getItem('golfFavs'))||[]);
+let homeImages=JSON.parse(localStorage.getItem('homeImgs'))||[null,null];
+let customGames=JSON.parse(localStorage.getItem('golfCustomGames'))||[];
+let cgDiff='easy',cgMin=2,cgMax=4;
+const CG_COLORS=['#15803d','#1d4ed8','#dc2626','#d97706','#7c3aed','#0891b2','#374151','#92400e','#db2777','#ea580c'];
+let cgColor=CG_COLORS[0];
+
+// ═══════════════════════════
+// INIT
+// ═══════════════════════════
+function init(){
+  applyTheme(activeTheme,false);
+  buildTabBars();
+  renderGames();
+  renderFavs();
+  renderHomeImages();
+  buildCgColors();
+  renderCustomGames();
+  buildLbSidebar();
+  renderLeaderboard();
+  renderFriends();
+  renderRounds();
+
+  // Splash → auth or home
+  setTimeout(()=>{
+    const splash=document.getElementById('view-splash');
+    splash.classList.remove('active');
+    setTimeout(()=>{
+      splash.classList.remove('visible');
+      try {
+        if(currentUser&&accounts[currentUser]){
+          profile=accounts[currentUser];
+          rounds=JSON.parse(localStorage.getItem('rounds_'+currentUser))||[];
+          renderProfile();
+          renderRounds();
+          transitionTo('home');
+        } else {
+          transitionTo('auth-welcome');
+        }
+      } catch(e) {
+        console.error('Navigation error:', e);
+        transitionTo('auth-welcome');
+      }
+    },260);
+  },2600);
+}
+
+// ═══════════════════════════
+// VIEW TRANSITIONS
+// ═══════════════════════════
+function transitionTo(id){
+  const prev=document.querySelector('.view.active');
+  const next=document.getElementById('view-'+id);
+  if(!next||next===prev) return;
+
+  // For overlays, keep prev behind
+  if(!next.classList.contains('overlay')){
+    if(prev&&!prev.classList.contains('overlay')){
+      prev.classList.remove('active');
+      setTimeout(()=>prev.classList.remove('visible'),240);
+    }
+  }
+  next.classList.add('visible');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>next.classList.add('active')));
+}
+
+function switchTab(id){
+  // Close overlays first
+  ['setup','play','summary'].forEach(ov=>{
+    const el=document.getElementById('view-'+ov);
+    if(el&&el.classList.contains('active')){
+      el.classList.remove('active');
+      setTimeout(()=>el.classList.remove('visible'),280);
+    }
+  });
+  transitionTo(id);
+  // Update active state in all tab bars
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.classList.toggle('active',t.dataset.tab===id);
+  });
+}
+
+function showOverlay(id){
+  const el=document.getElementById('view-'+id);
+  el.classList.add('visible');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('active')));
+  if(id==='settings')populateSettings();
+}
+
+// ═══════════════════════════
+// TAB BARS
+// ═══════════════════════════
+function buildTabBars(){
+  TAB_ORDER.forEach(tabId=>{
+    const bar=document.getElementById('tb-'+tabId);
+    if(!bar) return;
+    bar.innerHTML=TAB_ORDER.map(t=>`
+      <div class="tab${t===tabId?' active':''}" data-tab="${t}" onclick="switchTab('${t}')">
+        <svg viewBox="0 0 24 24"><path d="${TAB_ICONS[t]}"/></svg>
+      </div>`).join('');
+  });
+}
+
+// ═══════════════════════════
+// AUTH
+// ═══════════════════════════
+function goAuth(screen){transitionTo('auth-'+screen);}
+
+function doSignIn(){
+  const u=document.getElementById('si-user').value.trim();
+  const p=document.getElementById('si-pass').value;
+  const err=document.getElementById('si-err');
+  if(!accounts[u]||accounts[u].password!==p){err.textContent='Incorrect username or password.';return;}
+  err.textContent='';
+  finishAuth(u);
+}
+
+function doSignUp(){
+  const name=document.getElementById('su-name').value.trim();
+  const u=document.getElementById('su-user').value.trim().toLowerCase().replace(/\s/g,'');
+  const email=document.getElementById('su-email').value.trim();
+  const p=document.getElementById('su-pass').value;
+  const err=document.getElementById('su-err');
+  if(!name||!u||!p){err.textContent='Name, username, and password are required.';return;}
+  if(accounts[u]){err.textContent='That username is already taken.';return;}
+  const id='GF-'+Math.random().toString(36).substr(2,6).toUpperCase();
+  accounts[u]={name,username:u,email,password:p,id,photo:null,chips:1000,rounds:0,wins:0,course:'',ghinNumber:'',venmo:'',cashapp:'',zelle:'',hcRounds:[]};
+  localStorage.setItem('golfAccounts',JSON.stringify(accounts));
+  err.textContent='';
+  finishAuth(u);
+}
+
+function finishAuth(u){
+  currentUser=u;
+  localStorage.setItem('golfCurrentUser',u);
+  profile=accounts[u];
+  rounds=JSON.parse(localStorage.getItem('rounds_'+u))||[];
+  renderProfile();
+  renderRounds();
+  updateChipDisplay();
+  switchTab('home');
+}
+
+function doLogout(){
+  if(!confirm('Sign out?')) return;
+  localStorage.removeItem('golfCurrentUser');
+  currentUser=null;profile=null;
+  document.getElementById('si-user').value='';
+  document.getElementById('si-pass').value='';
+  switchTab('home');
+  setTimeout(()=>transitionTo('auth-welcome'),50);
+}
+
+// ═══════════════════════════
+// HOME — GAME LIST
+// ═══════════════════════════
+function makeGameCard(g, showFav=true){
+  const pl=g.players.min===g.players.max?g.players.min+' Players':g.players.min+'–'+g.players.max+' Players';
+  const diff={easy:'Easy',medium:'Moderate',spicy:'High Stakes'}[g.difficulty];
+  const isFav=favorites.has(g.id);
+  const d=document.createElement('div');
+  d.className='gcard';
+  const badge=g.isCustom?` <span class="custom-badge">Custom</span>`:'';
+  d.innerHTML=`<div class="gi"><div class="gname">${g.name}${badge}</div><div class="gdesc">${g.tagline}</div><div class="tags"><span class="tag">${pl}</span><span class="tag ${g.difficulty}">${diff}</span></div></div><button class="setup-btn">Set Up</button>`;
+  d.querySelector('.setup-btn').onclick=()=>openSetup(g.id);
+  if(showFav){
+    const favBtn=document.createElement('button');
+    favBtn.className='fav-btn'+(isFav?' on':'');
+    favBtn.title=isFav?'Remove from favorites':'Add to favorites';
+    favBtn.textContent=isFav?'♥':'♡';
+    favBtn.onclick=()=>toggleFav(g.id);
+    d.appendChild(favBtn);
+  }
+  return d;
+}
+
+function renderGames(){
+  const list=document.getElementById('game-list');
+  list.innerHTML='';
+  [...GAMES,...customGames].forEach(g=>list.appendChild(makeGameCard(g)));
+}
+
+function toggleFav(id){
+  if(favorites.has(id))favorites.delete(id);else favorites.add(id);
+  localStorage.setItem('golfFavs',JSON.stringify([...favorites]));
+  renderGames();renderFavs();
+}
+
+function renderFavs(){
+  const sec=document.getElementById('fav-section');
+  const list=document.getElementById('fav-list');
+  if(!sec||!list)return;
+  const favGames=[...GAMES,...customGames].filter(g=>favorites.has(g.id));
+  sec.style.display=favGames.length?'block':'none';
+  list.innerHTML='';
+  favGames.forEach(g=>list.appendChild(makeGameCard(g)));
+}
+
+function handleHomeImg(inp,idx){
+  if(!inp.files[0])return;
+  resizeImage(inp.files[0],350).then(dataUrl=>{
+    homeImages[idx]=dataUrl;
+    localStorage.setItem('homeImgs',JSON.stringify(homeImages));
+    renderHomeImages();
+  });
+}
+
+function renderHomeImages(){
+  [0,1].forEach(i=>{
+    const slot=document.getElementById('hi'+i);
+    if(!slot)return;
+    const ph=slot.querySelector('.home-img-ph');
+    let img=slot.querySelector('img.hi-img');
+    if(homeImages[i]){
+      if(!img){img=document.createElement('img');img.className='hi-img';slot.insertBefore(img,ph);}
+      img.src=homeImages[i];
+      if(ph)ph.style.display='none';
+    } else {
+      if(img)img.remove();
+      if(ph)ph.style.display='';
+    }
+  });
+}
+
+// ═══════════════════════════
+// SETUP VIEW
+// ═══════════════════════════
+function openSetup(id){
+  currentGame=GAMES.find(g=>g.id===id)||customGames.find(g=>g.id===id);
+  if(!currentGame) return;
+  document.getElementById('s-title').textContent=currentGame.name;
+  document.getElementById('s-tagline').textContent=currentGame.tagline;
+  document.getElementById('s-rules').textContent=currentGame.rules;
+  const img=document.getElementById('s-banner-img');
+  img.src='https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?auto=format&fit=crop&w=900&q=80';
+  img.style.display='block';
+  const ov=document.getElementById('s-banner-overlay');
+  ov.style.background=currentGame.color+'cc';
+  ov.innerHTML=`<div class="banner-label" style="font-size:24px">${currentGame.name}</div>`;
+  document.getElementById('s-yt').href='https://www.youtube.com/results?search_query='+encodeURIComponent(currentGame.ytSearch);
+  document.getElementById('s-yt-title').textContent='How to Play — '+currentGame.name;
+  selHolesN=9;selPlayersN=currentGame.players.def;selBetN=5;
+  document.getElementById('btn9').classList.add('on');
+  document.getElementById('btn18').classList.remove('on');
+  document.getElementById('scount').textContent=selPlayersN;
+  document.getElementById('snote').textContent=selPlayersN===1?'player':'players';
+  document.getElementById('custom-bet').value='';
+  document.querySelectorAll('.bet-tile').forEach((t,i)=>t.classList.toggle('on',i===0));
+  refreshSteppers();buildNameInputs();
+  showOverlay('setup');
+  document.querySelector('#view-setup .scroll').scrollTop=0;
+}
+
+function buildNameInputs(){
+  const c=document.getElementById('pname-inputs');c.innerHTML='';
+  const you=profile?.name||'You';
+  for(let i=0;i<selPlayersN;i++){
+    const inp=document.createElement('input');
+    inp.className='pname-input';
+    inp.placeholder=i===0?you:'Player '+(i+1);
+    inp.value=playerNames[i]||(i===0?you:'');
+    inp.dataset.i=i;
+    inp.oninput=()=>{playerNames[inp.dataset.i*1]=inp.value;};
+    c.appendChild(inp);
+  }
+}
+
+function selHoles(n){selHolesN=n;document.getElementById('btn9').classList.toggle('on',n===9);document.getElementById('btn18').classList.toggle('on',n===18);}
+function chgP(d){const{min,max}=currentGame.players;selPlayersN=Math.max(min,Math.min(max,selPlayersN+d));document.getElementById('scount').textContent=selPlayersN;document.getElementById('snote').textContent=selPlayersN===1?'player':'players';refreshSteppers();buildNameInputs();}
+function refreshSteppers(){document.getElementById('sbminus').disabled=selPlayersN<=currentGame.players.min;document.getElementById('sbplus').disabled=selPlayersN>=currentGame.players.max;}
+function selBet(t,a){selBetN=a;document.querySelectorAll('.bet-tile').forEach(b=>b.classList.remove('on'));t.classList.add('on');document.getElementById('custom-bet').value='';}
+function onCustomBet(i){const v=parseInt(i.value,10);if(v>0){selBetN=v;document.querySelectorAll('.bet-tile').forEach(b=>b.classList.remove('on'));}}
+
+// ═══════════════════════════
+// PLAY VIEW
+// ═══════════════════════════
+function startRound(){
+  totalHoles=selHolesN;
+  playerNames=[];
+  document.querySelectorAll('.pname-input').forEach((inp,i)=>{playerNames.push(inp.value.trim()||inp.placeholder);});
+  if(!playerNames.length){for(let i=0;i<selPlayersN;i++)playerNames.push(i===0?(profile?.name||'You'):'Player '+(i+1));}
+  scores=playerNames.map(()=>Array(totalHoles).fill(null));
+  currentHole=0;
+  document.getElementById('p-gname').textContent=currentGame.name;
+  buildHoleDots();renderHole();
+  showOverlay('play');
+  document.querySelector('.play-body').scrollTop=0;
+}
+
+function buildHoleDots(){
+  const c=document.getElementById('hole-dots');c.innerHTML='';
+  for(let i=0;i<Math.min(totalHoles,9);i++){const d=document.createElement('div');d.className='hdot';d.id='dot-'+i;c.appendChild(d);}
+  if(totalHoles>9){const m=document.createElement('div');m.className='hdot';m.style.cssText='width:4px;background:rgba(255,255,255,.3)';c.appendChild(m);}
+}
+
+function renderHole(){
+  const pars=selHolesN===9?PARS9:PARS18;
+  const par=pars[currentHole];
+  document.getElementById('p-hnum').textContent=currentHole+1;
+  document.getElementById('p-par').textContent=par;
+  document.getElementById('p-left').textContent=(totalHoles-currentHole-1)+' holes';
+  for(let i=0;i<Math.min(totalHoles,9);i++){const d=document.getElementById('dot-'+i);if(d)d.className='hdot'+(i<currentHole?' done':i===currentHole?' cur':'');}
+  const c=document.getElementById('score-cards');c.innerHTML='';
+  playerNames.forEach((name,pi)=>{
+    const div=document.createElement('div');div.className='score-card';
+    const av=getPlayerAvatar(pi);
+    div.innerHTML=`<div class="score-avatar">${av}</div><div class="score-info"><div class="score-pname">${name}</div><div class="score-stat" id="pstat-${pi}">${getPlayerStat(pi)}</div></div><input class="score-input" type="number" min="1" max="15" placeholder="—" value="${scores[pi][currentHole]||''}" data-pi="${pi}">`;
+    div.querySelector('.score-input').oninput=e=>{const v=parseInt(e.target.value,10);scores[pi][currentHole]=isNaN(v)||v<1?null:v;updateLiveStats();};
+    c.appendChild(div);
+  });
+  updateLiveStats();
+}
+
+function getPlayerAvatar(pi){
+  if(pi===0&&profile){
+    if(profile.photo)return`<img src="${profile.photo}" alt="">`;
+    return initAv(profile.name||'You',0);
+  }
+  return initAv(playerNames[pi]||'P',pi);
+}
+
+function calcSkins(){
+  const s=playerNames.map(()=>0);let carry=0;
+  for(let h=0;h<currentHole;h++){
+    const row=scores.map(p=>p[h]);
+    if(row.some(v=>v===null))continue;
+    const mn=Math.min(...row);
+    const ws=row.filter(v=>v===mn).length;
+    if(ws===1){s[row.indexOf(mn)]+=1+carry;carry=0;}else carry++;
+  }
+  return s;
+}
+
+function calcStableford(){
+  const pars=selHolesN===9?PARS9:PARS18;
+  return scores.map(ps=>ps.reduce((acc,s,h)=>{
+    if(s===null)return acc;
+    const d=s-pars[h];
+    return acc+(d<=-2?4:d===-1?3:d===0?2:d===1?1:0);
+  },0));
+}
+
+function getPlayerStat(pi){
+  if(!currentGame)return'';
+  if(currentGame.id==='skins'){const s=calcSkins();return`${s[pi]} skins · ${s[pi]*selBetN>=0?'+':''}${s[pi]*selBetN} chips`;}
+  if(currentGame.id==='stableford'){return`${calcStableford()[pi]} pts`;}
+  const t=scores[pi].reduce((a,b)=>a+(b||0),0);return t>0?`${t} strokes`:'—';
+}
+
+function updateLiveStats(){
+  const c=document.getElementById('gstat-rows');c.innerHTML='';
+  let rows=[];
+  if(currentGame.id==='skins'){const s=calcSkins();rows=playerNames.map((n,i)=>({n,v:`${s[i]} skins`,s:`${s[i]*selBetN>=0?'+':''}${s[i]*selBetN}`})).sort((a,b)=>parseInt(b.v)-parseInt(a.v));}
+  else if(currentGame.id==='stableford'){const p=calcStableford();rows=playerNames.map((n,i)=>({n,v:`${p[i]} pts`,s:''})).sort((a,b)=>parseInt(b.v)-parseInt(a.v));}
+  else{const t=scores.map(ps=>ps.reduce((a,b)=>a+(b||0),0));rows=playerNames.map((n,i)=>({n,v:t[i]||'—',s:''})).sort((a,b)=>a.v-b.v);}
+  rows.slice(0,5).forEach(r=>{const d=document.createElement('div');d.className='gstat-row';d.innerHTML=`<span class="gstat-label">${r.n}</span><span class="gstat-val">${r.v}${r.s?` <small style="color:var(--text-2);font-size:11px">${r.s}</small>`:''}</span>`;c.appendChild(d);});
+  playerNames.forEach((_,pi)=>{const el=document.getElementById('pstat-'+pi);if(el)el.textContent=getPlayerStat(pi);});
+}
+
+function prevHole(){if(currentHole>0){currentHole--;renderHole();}}
+function nextHole(){if(currentHole<totalHoles-1){currentHole++;renderHole();}else endRound();}
+
+function endRound(){
+  let standings=[];
+  if(currentGame.id==='skins'){const s=calcSkins();standings=playerNames.map((n,i)=>({n,chips:s[i]*selBetN})).sort((a,b)=>b.chips-a.chips);}
+  else if(currentGame.id==='stableford'){const p=calcStableford();standings=playerNames.map((n,i)=>({n,pts:p[i],chips:0})).sort((a,b)=>b.pts-a.pts);if(standings.length){standings[0].chips=selBetN*totalHoles*(standings.length-1);standings.slice(1).forEach(s=>s.chips=-selBetN*totalHoles);}}
+  else{const t=scores.map(ps=>ps.reduce((a,b)=>a+(b||0),0));standings=playerNames.map((n,i)=>({n,chips:0,t:t[i]||0})).sort((a,b)=>a.t-b.t);if(standings.length){standings[0].chips=selBetN*totalHoles*(standings.length-1);standings.slice(1).forEach(s=>s.chips=-selBetN*totalHoles);}}
+  const winner=standings[0];
+  document.getElementById('sum-winner').textContent=winner.n+' Wins!';
+  document.getElementById('sum-sub').textContent=currentGame.name+' · '+totalHoles+' holes · '+selBetN+' chips/hole';
+  document.getElementById('sum-results').innerHTML=standings.map((s,i)=>`<div class="result-row"><div class="result-rank">${i+1}</div><div class="result-name">${s.n}</div><div class="result-chips ${s.chips>=0?'pos':'neg'}">${s.chips>=0?'+':''}${s.chips}</div></div>`).join('');
+  if(profile){
+    const myR=standings.find(s=>s.n===(profile.name||'You')||s.n==='You');
+    profile.rounds++;
+    if(standings.indexOf(myR)===0)profile.wins++;
+    if(myR)profile.chips=Math.max(0,profile.chips+(myR.chips||0));
+    accounts[currentUser]=profile;
+    localStorage.setItem('golfAccounts',JSON.stringify(accounts));
+    rounds.unshift({game:currentGame.name,holes:totalHoles,bet:selBetN,players:playerNames,date:new Date().toLocaleDateString(),winner:winner.n,myChips:myR?.chips||0});
+    localStorage.setItem('rounds_'+currentUser,JSON.stringify(rounds.slice(0,50)));
+    renderProfile();renderRounds();updateChipDisplay();
+  }
+  showOverlay('summary');
+}
+
+function replayRound(){openSetup(currentGame.id);}
+
+// ═══════════════════════════
+// LEADERBOARD
+// ═══════════════════════════
+function buildLbSidebar(){
+  const c=document.getElementById('lb-sidebar');
+  if(!c)return;
+  c.innerHTML=GAMES.map(g=>`<div class="lb-side-btn${g.id===lbGame?' on':''}" data-g="${g.id}" onclick="switchLb('${g.id}')">${g.name}</div>`).join('');
+}
+function switchLb(id){
+  lbGame=id;
+  document.querySelectorAll('.lb-side-btn').forEach(b=>b.classList.toggle('on',b.dataset.g===id));
+  renderLeaderboard();
+}
+function renderLeaderboard(){
+  const data=MOCK_LB[lbGame]||[];
+  const cols=LB_COLS[lbGame]||['Stat','Extra'];
+  const c=document.getElementById('lb-body');
+  const allRows=[...data];
+  if(profile){
+    const existing=allRows.find(r=>r.n===(profile.name||'You'));
+    if(!existing)allRows.push({n:profile.name||'You',a:'—',b:'—',photo:profile.photo});
+    else existing.photo=profile.photo;
+  }
+  c.innerHTML=`<div class="lb-card">
+    <div class="lb-col-hdr"><span>Player</span><span class="lbc-stat">${cols[0]}</span><span class="lbc-extra">${cols[1]}</span></div>
+    ${allRows.map((r,i)=>{
+      const avHtml=r.photo?`<img src="${r.photo}" alt="">`:initAv(r.n,i);
+      return`<div class="lb-row"><div class="lb-rank ${['g1','g2','g3'][i]||''}">${i+1}</div><div class="lb-avatar">${avHtml}</div><div class="lb-name">${r.n}</div><div class="lb-stat">${r.a}</div><div class="lb-extra">${r.b}</div></div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ═══════════════════════════
+// FRIENDS
+// ═══════════════════════════
+function renderFriends(q=''){
+  const c=document.getElementById('fr-body');c.innerHTML='';
+  const query=q.toLowerCase();
+  const all=MOCK_FRIENDS.filter(f=>!query||f.n.toLowerCase().includes(query)||f.handle.includes(query));
+  const added=all.filter(f=>friendsAdded.has(f.handle));
+  const discover=all.filter(f=>!friendsAdded.has(f.handle));
+
+  // My ID row
+  if(profile){
+    const idDiv=document.createElement('div');
+    idDiv.className='fr-id-badge';
+    idDiv.innerHTML=`<div><div class="fr-id-text">Your Friend ID</div><div class="fr-id-val">${profile.id}</div></div><button class="fr-id-copy" onclick="copyId()">Copy</button>`;
+    c.appendChild(idDiv);
+  }
+
+  // Add by app ID
+  const addRow=document.createElement('div');
+  addRow.className='fr-add-id-row';
+  addRow.innerHTML=`<input id="fr-id-input" placeholder="Friend ID (e.g. GF-A1B2C3)"><button class="fr-add-id-btn" onclick="addByID()">Add</button>`;
+  c.appendChild(addRow);
+
+  // Add by GHIN number
+  const ghinRow=document.createElement('div');
+  ghinRow.className='fr-add-id-row';
+  ghinRow.innerHTML=`<input id="fr-ghin-input" type="tel" placeholder="GHIN number (e.g. 1234567)" maxlength="8"><button class="fr-add-id-btn" onclick="addByGhin()">Find</button>`;
+  c.appendChild(ghinRow);
+
+  if(added.length){
+    const lbl=document.createElement('div');lbl.className='fr-section-lbl';lbl.textContent='My Friends';c.appendChild(lbl);
+    added.forEach(f=>c.appendChild(mkFriendCard(f,true)));
+  }
+  if(discover.length){
+    const lbl=document.createElement('div');lbl.className='fr-section-lbl';lbl.style.marginTop='14px';lbl.textContent='Discover';c.appendChild(lbl);
+    discover.forEach(f=>c.appendChild(mkFriendCard(f,false)));
+  }
+}
+
+function mkFriendCard(f,isAdded){
+  const div=document.createElement('div');div.className='friend-card';
+  const fi=MOCK_FRIENDS.indexOf(f);
+  div.innerHTML=`<div class="fr-avatar">${initAv(f.n,fi)}${f.online?'<div class="online-dot"></div>':''}</div><div class="fr-info"><div class="fr-name">${f.n}</div><div class="fr-handle">${f.handle}</div><div class="fr-stats">${f.wins}W · ${f.losses}L</div></div><div class="fr-chips">${f.chips.toLocaleString()} chips</div><button class="${isAdded?'rm-btn':'add-btn'}" onclick="toggleFriend('${f.handle}')">${isAdded?'Remove':'+ Add'}</button>`;
+  return div;
+}
+
+function toggleFriend(h){if(friendsAdded.has(h))friendsAdded.delete(h);else friendsAdded.add(h);renderFriends(document.querySelector('.search-bar')?.value||'');}
+function filterFriends(q){renderFriends(q);}
+
+function addByID(){
+  const val=(document.getElementById('fr-id-input')?.value||'').trim().toUpperCase();
+  if(!val){return;}
+  const found=Object.values(accounts).find(a=>a.id===val);
+  if(!found){alert('User not found. Make sure the ID is correct.');return;}
+  if(found.username===currentUser){alert('That\'s your own ID!');return;}
+  friendsAdded.add('@'+found.username);
+  alert(`Added ${found.name} (@${found.username}) as a friend!`);
+  document.getElementById('fr-id-input').value='';
+  renderFriends();
+}
+
+function addByGhin(){
+  const val=(document.getElementById('fr-ghin-input')?.value||'').replace(/\D/g,'');
+  if(!val){return;}
+  // Search all local accounts for a matching GHIN number
+  const found=Object.values(accounts).find(a=>a.ghinNumber===val);
+  if(!found){
+    alert('No Golf Games user found with GHIN #'+val+' on this device.\n\nAsk your friend to:\n1. Open Golf Games\n2. Go to Profile\n3. Enter their GHIN number\n\nOnce a backend is live, this will search all registered players.');
+    return;
+  }
+  if(found.username===currentUser){alert('That\'s your own GHIN number!');return;}
+  friendsAdded.add('@'+found.username);
+  alert(`Found ${found.name} via GHIN #${val} — added as a friend!`);
+  document.getElementById('fr-ghin-input').value='';
+  renderFriends();
+}
+
+function copyId(){
+  if(!profile)return;
+  navigator.clipboard?.writeText(profile.id).then(()=>alert('Copied: '+profile.id)).catch(()=>alert('Your ID: '+profile.id));
+}
+
+// ═══════════════════════════
+// ROUNDS
+// ═══════════════════════════
+function renderRounds(){
+  const c=document.getElementById('sc-body');
+  if(!rounds.length){c.innerHTML=`<div class="empty-state"><div class="empty-msg">No rounds yet</div><div class="empty-sub">Complete a game to see your history</div></div>`;return;}
+  c.innerHTML=rounds.map(r=>`<div class="round-card"><div class="round-top"><div class="round-game">${r.game}</div><div class="round-date">${r.date}</div></div><div class="round-detail">${r.holes} holes · ${r.bet} chips/hole · ${r.players?.length||'?'} players</div><div class="round-result"><div class="round-winner">Winner: ${r.winner}</div><div class="round-chips ${r.myChips>=0?'pos':'neg'}">${r.myChips>=0?'+':''}${r.myChips}</div></div></div>`).join('');
+}
+
+// ═══════════════════════════
+// PROFILE
+// ═══════════════════════════
+function renderProfile(){
+  if(!profile)return;
+  document.getElementById('pr-disp-name').textContent=profile.name||'Your Name';
+  document.getElementById('pr-disp-handle').textContent=profile.username?'@'+profile.username:'@username';
+  document.getElementById('pr-id-val').textContent=profile.id||'GF-——';
+  document.getElementById('pr-chips').textContent=(profile.chips||0).toLocaleString();
+  document.getElementById('pr-rounds').textContent=profile.rounds||0;
+  document.getElementById('pr-wins').textContent=profile.wins||0;
+  updateProfilePhoto();
+  renderPayment();
+  updateChipDisplay();
+}
+
+function renderPayment(){
+  const c=document.getElementById('pay-section');
+  if(!c||!profile)return;
+  const rows=[
+    {key:'venmo',label:'Venmo',cls:'venmo-brand',letter:'V',link:h=>`https://venmo.com/${h.replace('@','')}`,note:'Pay via Venmo'},
+    {key:'cashapp',label:'CashApp',cls:'cash-brand',letter:'$',link:h=>`https://cash.app/${h.startsWith('$')?h:'$'+h}`,note:'Pay via CashApp'},
+    {key:'zelle',label:'Zelle',cls:'zelle-brand',letter:'Z',link:null,note:''},
+  ];
+  c.innerHTML=rows.map(r=>{
+    const handle=profile[r.key]||'';
+    const hasHandle=!!handle;
+    const openBtn=hasHandle&&r.link?`<button class="pay-open" onclick="window.open('${r.link(handle)}','_blank')">Pay</button>`:'';
+    const copyBtn=hasHandle?`<button class="pay-copy" onclick="navigator.clipboard?.writeText('${handle}').then(()=>alert('Copied!'))">Copy</button>`:'';
+    return`<div class="pay-row"><div class="pay-brand ${r.cls}">${r.letter}</div><div class="pay-info"><div class="pay-platform">${r.label}</div><div class="pay-handle${hasHandle?'':' empty'}">${handle||'Not set — tap the settings icon'}</div></div><div class="pay-actions">${openBtn}${copyBtn}</div></div>`;
+  }).join('');
+}
+
+// ── Settings overlay ──
+function openSettings(){showOverlay('settings');}
+function closeSettings(){
+  const el=document.getElementById('view-settings');
+  el.classList.remove('active');
+  setTimeout(()=>el.classList.remove('visible'),280);
+  renderProfile();
+}
+
+function populateSettings(){
+  if(!profile)return;
+  const f=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
+  f('st-name',profile.name);f('st-handle',profile.username);f('st-course',profile.course);
+  f('st-ghin',profile.ghinNumber);f('st-venmo',profile.venmo);f('st-cashapp',profile.cashapp);f('st-zelle',profile.zelle);
+  const hcEl=document.getElementById('st-hc-display');
+  if(hcEl)hcEl.textContent=profile.handicap?`Current estimate: ${profile.handicap}`:'Add rounds below to estimate your handicap';
+}
+
+function saveSettings(){
+  if(!profile||!currentUser)return;
+  const g=id=>document.getElementById(id)?.value.trim()||'';
+  profile.name=g('st-name');
+  profile.username=g('st-handle').replace('@','').toLowerCase().replace(/\s/g,'');
+  profile.course=g('st-course');
+  profile.ghinNumber=g('st-ghin').replace(/\D/g,'');
+  profile.venmo=g('st-venmo');
+  profile.cashapp=g('st-cashapp');
+  profile.zelle=g('st-zelle');
+  accounts[currentUser]=profile;
+  localStorage.setItem('golfAccounts',JSON.stringify(accounts));
+  document.getElementById('pr-disp-name').textContent=profile.name||'Your Name';
+  document.getElementById('pr-disp-handle').textContent=profile.username?'@'+profile.username:'@username';
+}
+
+function updateProfilePhoto(){
+  if(!profile)return;
+  const img=document.getElementById('pr-photo-img');
+  const emoji=document.getElementById('pr-emoji');
+  if(profile.photo){img.src=profile.photo;img.style.display='block';emoji.style.display='none';}
+  else{img.style.display='none';emoji.style.display='flex';emoji.innerHTML=initAv(profile.name||'?',0);}
+}
+
+async function handlePhoto(inp){
+  if(!inp.files[0]||!profile)return;
+  const dataUrl=await resizeImage(inp.files[0],200);
+  profile.photo=dataUrl;
+  accounts[currentUser]=profile;
+  localStorage.setItem('golfAccounts',JSON.stringify(accounts));
+  updateProfilePhoto();
+  renderLeaderboard();
+}
+
+function resizeImage(file,maxDim){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement('canvas');
+        const scale=Math.min(maxDim/img.width,maxDim/img.height,1);
+        canvas.width=img.width*scale;canvas.height=img.height*scale;
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg',.75));
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveProfile(){
+  // No-op now — profile edits happen through saveSettings()
+}
+
+// ── Handicap calculator ──
+function addHcRound(){
+  if(!profile||!currentUser)return;
+  const score=parseFloat(document.getElementById('hc-score').value);
+  const rating=parseFloat(document.getElementById('hc-rating').value);
+  const slope=parseFloat(document.getElementById('hc-slope').value);
+  if(isNaN(score)||isNaN(rating)||isNaN(slope)){alert('Enter score, rating, and slope.');return;}
+  if(!profile.hcRounds)profile.hcRounds=[];
+  profile.hcRounds.push({score,rating,slope});
+  accounts[currentUser]=profile;
+  localStorage.setItem('golfAccounts',JSON.stringify(accounts));
+  document.getElementById('hc-score').value='';
+  document.getElementById('hc-rating').value='';
+  document.getElementById('hc-slope').value='';
+  renderHcRounds();
+}
+
+function removeHcRound(i){
+  if(!profile)return;
+  profile.hcRounds.splice(i,1);
+  accounts[currentUser]=profile;
+  localStorage.setItem('golfAccounts',JSON.stringify(accounts));
+  renderHcRounds();
+}
+
+function computeHandicap(hcRounds){
+  if(!hcRounds||!hcRounds.length)return null;
+  const diffs=hcRounds.map(r=>((r.score-r.rating)*113/r.slope));
+  diffs.sort((a,b)=>a-b);
+  const take=Math.max(1,Math.ceil(diffs.length*0.4));
+  const avg=diffs.slice(0,take).reduce((a,b)=>a+b,0)/take;
+  return Math.max(0,Math.round(avg*0.96*10)/10);
+}
+
+function renderHcRounds(){
+  if(!profile)return;
+  const list=document.getElementById('hc-rounds-list');
+  const resultArea=document.getElementById('hc-result-area');
+  const hcDisplayEl=document.getElementById('st-hc-display');
+  if(!list||!resultArea)return;
+  const hcRounds=profile.hcRounds||[];
+
+  list.innerHTML=hcRounds.map((r,i)=>{
+    const diff=((r.score-r.rating)*113/r.slope).toFixed(1);
+    return`<div class="hc-round-item"><span>${r.score} · ${r.rating} / ${r.slope}</span><span class="hc-round-diff">Diff: ${diff}</span><button class="hc-rm" onclick="removeHcRound(${i})">×</button></div>`;
+  }).join('');
+
+  const hc=computeHandicap(hcRounds);
+  if(hc!==null){
+    resultArea.innerHTML=`<div class="hc-result"><span class="hc-result-label">Estimated Handicap Index</span><span class="hc-result-val">${hc}</span></div>`;
+    profile.handicap=hc;
+    if(hcDisplayEl)hcDisplayEl.textContent='Current estimate: '+hc;
+    accounts[currentUser]=profile;
+    localStorage.setItem('golfAccounts',JSON.stringify(accounts));
+  }else{
+    resultArea.innerHTML='';
+    if(hcInput)hcInput.value='';
+  }
+}
+
+// ═══════════════════════════
+// CREATE GAME
+// ═══════════════════════════
+function buildCgColors(){
+  const c=document.getElementById('cg-colors');
+  if(!c)return;
+  c.innerHTML='';
+  CG_COLORS.forEach(col=>{
+    const btn=document.createElement('div');
+    btn.className='color-swatch'+(col===cgColor?' on':'');
+    btn.style.background=col;
+    btn.dataset.color=col;
+    btn.onclick=()=>{
+      cgColor=col;
+      document.querySelectorAll('#cg-colors .color-swatch').forEach(b=>b.classList.toggle('on',b.dataset.color===col));
+    };
+    c.appendChild(btn);
+  });
+}
+
+function setCgDiff(d,btn){
+  cgDiff=d;
+  document.querySelectorAll('#cg-diff-seg .seg-btn').forEach(b=>b.classList.toggle('on',b===btn));
+}
+
+function cgChgMin(d){
+  cgMin=Math.max(2,Math.min(cgMax,cgMin+d));
+  document.getElementById('cg-min').textContent=cgMin;
+}
+
+function cgChgMax(d){
+  cgMax=Math.max(cgMin,Math.min(8,cgMax+d));
+  document.getElementById('cg-max').textContent=cgMax;
+}
+
+function saveCustomGame(){
+  const name=(document.getElementById('cg-name')?.value||'').trim();
+  const tagline=(document.getElementById('cg-tagline')?.value||'').trim();
+  const rules=(document.getElementById('cg-rules')?.value||'').trim();
+  if(!name){alert('Give your game a name.');return;}
+  if(!rules){alert('Add the rules so people know how to play.');return;}
+  const game={
+    id:'custom_'+Date.now(),
+    name,
+    tagline:tagline||'Custom game',
+    difficulty:cgDiff,
+    players:{min:cgMin,max:cgMax,def:Math.min(4,cgMax)},
+    color:cgColor,
+    rules,
+    ytSearch:name+' golf game rules',
+    isCustom:true
+  };
+  customGames.unshift(game);
+  localStorage.setItem('golfCustomGames',JSON.stringify(customGames));
+  ['cg-name','cg-tagline','cg-rules'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  cgDiff='easy';cgMin=2;cgMax=4;cgColor=CG_COLORS[0];
+  document.querySelectorAll('#cg-diff-seg .seg-btn').forEach((b,i)=>b.classList.toggle('on',i===0));
+  const minEl=document.getElementById('cg-min');const maxEl=document.getElementById('cg-max');
+  if(minEl)minEl.textContent='2';if(maxEl)maxEl.textContent='4';
+  buildCgColors();
+  renderCustomGames();
+  renderGames();
+  renderFavs();
+}
+
+function deleteCustomGame(id){
+  if(!confirm('Delete this game?'))return;
+  customGames=customGames.filter(g=>g.id!==id);
+  localStorage.setItem('golfCustomGames',JSON.stringify(customGames));
+  renderCustomGames();
+  renderGames();
+  renderFavs();
+}
+
+function renderCustomGames(){
+  const sec=document.getElementById('cg-saved-section');
+  const list=document.getElementById('cg-saved-list');
+  if(!sec||!list)return;
+  if(!customGames.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  list.innerHTML='';
+  customGames.forEach(g=>{
+    const div=document.createElement('div');
+    div.className='cg-card';
+    const diff={easy:'Easy',medium:'Moderate',spicy:'High Stakes'}[g.difficulty]||g.difficulty;
+    div.innerHTML=`<div class="cg-card-info"><div class="cg-card-name">${g.name}</div><div class="cg-card-desc">${g.tagline}</div><div class="tags"><span class="tag">${g.players.min}–${g.players.max} Players</span><span class="tag ${g.difficulty}">${diff}</span></div></div><div class="cg-card-actions"><button class="cg-del-btn" onclick="deleteCustomGame('${g.id}')">Delete</button><button class="cg-play-btn" onclick="switchTab('home');setTimeout(()=>openSetup('${g.id}'),300)">Set Up</button></div>`;
+    list.appendChild(div);
+  });
+}
+
+// ── Themes ──
+function setTheme(t){
+  activeTheme=t;
+  localStorage.setItem('golfTheme',t);
+  applyTheme(t,true);
+}
+function applyTheme(t,animate){
+  document.getElementById('app').dataset.theme=t;
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('on',s.id==='sw-'+t));
+}
+
+// ── Chip display ──
+function updateChipDisplay(){
+  const el=document.getElementById('chip-display');
+  if(el)el.textContent=(profile?.chips||0).toLocaleString()+' chips';
+}
+
+// ═══════════════════════════
+// BOOT
+// ═══════════════════════════
+init();
+
+// ── Register the service worker (PWA: installable + offline) ──
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(err=>console.warn('SW registration failed:',err));
+  });
+}
+</script>
+</body>
+</html>

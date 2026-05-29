@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+
+# Node (for Phase B — the AI assistant)
+node_modules/
+.env
+.env.local
+
+# Vercel
+.vercel

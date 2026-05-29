@@ -1,0 +1,236 @@
+﻿GOLF GAMES APP
+Product Requirements Document
+Built by Graham
+Version 1.0
+1. The Big Picture
+Elevator Pitch
+A mobile first app where golfers pick a betting game like wolf, skins, or bingo bango bongo, get the rules and a custom scorecard, play with virtual money on the line, and post their results to a leaderboard. An AI assistant inside the app answers rules questions mid round so nobody has to memorize every game. Free to use, with a paid tier for premium game packs and higher virtual stakes.
+The Problem
+Golfers love betting games but most groups only know two or three. The rest live in old golf magazines or buried Reddit threads. There is no clean app that puts the rules, scorecard, and scoring math in your pocket. Existing golf apps treat betting as a side feature buried inside a giant GPS and stats tool.
+Who This Is For
+* Casual to semi serious golfers, age 18 to 60
+* Groups of friends who play together 5 or more times a year
+* Junior golfers, college players, and weekend warriors
+* Players who already use apps like 18Birdies or GolfShot but want something focused
+Why This Wins
+* First app where betting games are the main event, not a side feature
+* Built in AI rules assistant that no competitor has
+* Virtual money keeps the stakes fun without legal gambling problems
+* Local leaderboards by course create real bragging rights
+2. Core Features
+Phase 1: The MVP (Minimum Viable Product)
+This is the smallest version that can ship and still be useful. Build this first, get real users, then expand.
+Game Catalog
+* Library of 8 to 10 golf betting games to start
+* Each game has: short summary, full rules, scoring example, custom scorecard
+* Games tagged by group size, skill level, and difficulty to learn
+Custom Scorecards
+* Scorecard layout adapts to whichever game is selected
+* Auto calculates points or winnings as the round goes
+* Saves the round to user history when finished
+Virtual Money System
+* Each user starts with a virtual bankroll (example: 1000 chips)
+* Bets are tracked per game in the app, not real money
+* Cannot be exchanged for cash, which keeps it legal
+* Win or lose chips based on game results
+Friends and Groups
+* Add friends by username or share link
+* Create a group for your regular foursome
+* See lifetime stats against each friend
+AI Rules Assistant
+* Chat with an AI that knows every game in the catalog
+* Answers questions like, what happens in wolf if I am the lone wolf and lose
+* Available mid round on the same screen as the scorecard
+* Powered by Claude API on the backend
+Local Leaderboards
+* Filtered by home course and game type
+* Shows top scores or biggest virtual winnings
+* Friend group leaderboard for private competition
+Phase 2: After Launch
+Build these only after the MVP has real users and you know what they actually want.
+* Premium game packs (paid unlock for advanced games)
+* Custom game builder (users invent and share their own betting games)
+* Season long competitions and tournaments
+* Verified scores requiring a second player to confirm
+* Course discovery and basic GPS yardages
+Phase 3: Wrap as a Real iOS App
+* Take the working web app and wrap it using Capacitor
+* Sign up for Apple Developer Program (needs parent over 18 to hold account)
+* Submit to the App Store
+* Add iOS specific touches like push notifications and haptics
+3. Tech Stack
+This is the actual technology you will use to build the app. Do not change this unless you have a strong reason. Sticking to one stack is how solo builders ship.
+Frontend (what the user sees)
+* React with Vite (lets Claude Code work fast and your app feel modern)
+* Tailwind CSS for styling (you can override defaults to avoid the AI look)
+* Hosted on Vercel for free
+Backend (the server side)
+* Supabase (gives you a database, authentication, and an API for free)
+* Why Supabase: it handles user logins, stores data, and is friendly to beginners
+Database
+* PostgreSQL via Supabase
+* Stores users, games, scores, friends, leaderboards, and virtual currency balances
+AI Rules Assistant
+* Anthropic Claude API (claude-sonnet-4-6 or newer)
+* Call from your backend, never from the frontend
+* Set a 20 dollar monthly spending cap during testing
+Payments (Phase 2)
+* Stripe for virtual currency packs and premium unlocks
+* Apple in app purchases when on iOS
+Tools You Will Actually Use
+* VS Code (code editor)
+* Claude Code (writes most of the code)
+* GitHub (saves and versions your code)
+* Figma (sketch out screens before building)
+4. Screens and User Flow
+These are every screen the app needs in Phase 1. Build them in this order.
+1. Welcome and Sign Up: account creation with email and password or Google login
+2. Home Course Setup: user picks their home course on first launch
+3. Main Tab Bar: Home, Play, Leaderboard, Friends, Profile
+4. Home: shows recent rounds, friend activity, current chip balance
+5. Play (game picker): browse the catalog of betting games
+6. Game Detail: full rules, scoring example, big start round button
+7. Live Scorecard: hole by hole scoring with running totals
+8. AI Rules Chat: accessible from the scorecard, slides up from bottom
+9. Round Summary: who won, final standings, chips earned or lost
+10. Leaderboard: filter by game, course, friends only, all time
+11. Friends: add, remove, search by username
+12. Profile: stats, settings, virtual chip balance, history
+5. Step by Step Build Plan
+Each phase is roughly two weeks of part time work. Do them in order. Do not skip ahead.
+Phase 1A: Setup (Week 1)
+13. Install Node.js, VS Code, and Claude Code on your Mac
+14. Create a GitHub account and learn basic git commands (commit, push, pull)
+15. Set up a new project with Vite, React, and Tailwind
+16. Create a Supabase account and a new project
+17. Buy the domain name once you pick one
+18. Connect GitHub to Vercel and deploy a hello world page
+Phase 1B: Auth and Database (Week 2)
+19. Build a sign up and login screen using Supabase auth
+20. Create database tables: users, courses, games, rounds, friendships
+21. Build the home course selection screen
+22. Build the basic main tab bar navigation
+Phase 1C: Game Catalog (Week 3)
+23. Write the rules and scoring for 8 games in a content file
+24. Build the game picker screen
+25. Build the game detail screen
+26. Make sure each game shows its proper scorecard format
+Phase 1D: Live Scorecard (Week 4)
+27. Build the scorecard component that adapts per game
+28. Add hole by hole input
+29. Auto calculate winnings and standings
+30. Save rounds to the database when finished
+Phase 1E: Virtual Money and Friends (Week 5)
+31. Add chip balance to user profiles
+32. Update balances at end of each round
+33. Build friends search, add, and remove
+34. Show friend list and head to head stats
+Phase 1F: AI Rules Assistant (Week 6)
+35. Set up Anthropic API account and get a key
+36. Store key in Vercel environment variables, never in code
+37. Build a backend endpoint that calls Claude with the rules as context
+38. Build the chat UI inside the scorecard screen
+39. Set spending limit on Anthropic account to 20 dollars per month
+Phase 1G: Leaderboards (Week 7)
+40. Build the leaderboard query in Supabase
+41. Filter by course, game type, friends only
+42. Show ranking, name, total winnings
+Phase 1H: Polish and Launch (Week 8)
+43. Pick the aesthetic and lock in colors, fonts, and feel
+44. Test the app on three different real phones
+45. Fix every bug a real user would hit in the first 5 minutes
+46. Write a one paragraph app description
+47. Make 3 short demo videos for TikTok and Instagram
+48. Launch on a Friday or Saturday and post in all your channels
+6. When You Get Stuck
+This will happen often. Here is exactly what to do, in order, every single time.
+49. Read the error message slowly out loud. Errors usually say what is wrong.
+50. Copy the error and paste it into Claude Code, asking what it means and how to fix it.
+51. Ask Claude Code to explain the broken code in plain English.
+52. If still stuck, search the exact error message on Google. Top result is usually Stack Overflow.
+53. If still stuck, take a 10 minute walk. Come back. The fix is usually obvious.
+54. If still stuck after that, post the problem in r/learnprogramming with code and error.
+The Golden Rule
+Never copy code from Claude Code that you do not understand at least at a high level. If something is unclear, ask Claude Code to explain it before moving on. This single habit is what separates builders who ship from builders who give up.
+7. Security Rules
+Simple rules that keep you and your users safe. Break any of them and you can lose money or get hacked.
+55. Never commit API keys or secrets to GitHub. Use environment variables instead.
+56. Never put API keys in frontend code. They will be visible to every user.
+57. Turn on two factor authentication on GitHub, Vercel, Supabase, and Anthropic accounts.
+58. Set spending limits on every paid service from day one.
+59. Use Supabase Row Level Security so users can only see their own data.
+60. Never store user passwords yourself. Always use Supabase auth or another auth provider.
+61. Validate all user input on the backend, not just the frontend.
+62. If you add Stripe later, use Stripe Checkout. Never write your own payment code.
+8. Marketing and Launch
+Pre Launch (during the build)
+* Tell golf friends about the project. Get 10 people who promise to download it on day one.
+* Take screenshots of progress and post to Instagram or TikTok every week.
+* Build a simple landing page with an email signup form.
+Launch Week
+* Post a 15 to 30 second demo video on TikTok, Instagram Reels, and YouTube Shorts
+* Post in r/golf, r/SideProject, and r/InternetIsBeautiful
+* Submit to Product Hunt for the Tuesday launch
+* Email everyone on your pre launch list
+* Post in any golf group chats you are part of
+Ongoing
+* Post one short video per week showing a friend group using the app
+* Reach out to small golf YouTubers and offer them early access
+* Comment on golf TikToks where people argue about rules (organic discovery)
+* Drop flyers at local pro shops: Beverly G and T, Rockport GC, Tedesco, Salem CC
+What Not To Do
+* Do not buy ads until you have at least 100 organic users. Ads on a broken app waste money.
+* Do not announce features that are not built yet. Ship first, post second.
+* Do not try to be on every platform. Pick TikTok plus one other and dominate those.
+9. Realistic Costs
+Item
+	Cost
+	Domain name (first year)
+	$10 to $15
+	Vercel hosting
+	Free
+	Supabase backend (free tier)
+	Free up to 50k users
+	Claude API (with cap)
+	Up to $20/month
+	Apple Developer Program (Phase 3)
+	$99/year
+	Total to launch web app
+	~$15
+	Total to launch on App Store
+	~$115 first year
+	10. Honest Risks
+Every project has risks. Knowing them upfront makes you stronger, not weaker.
+The cold start problem
+Leaderboards only feel meaningful with users on them. The first 50 users will see empty leaderboards, which feels boring. Solution: seed the app with friends and family before launching publicly. Run a few demo rounds yourself to populate it.
+Virtual money may feel weightless
+Some golfers will say virtual chips do not matter, only real money. They are not wrong. The app has to make the chips feel meaningful through leaderboards, streaks, and bragging rights. If users do not care about their balance, the app loses its hook.
+Scope creep
+The biggest risk for any solo first time builder. You will be tempted to add features constantly. Resist this. Ship the MVP. Talk to users. Then decide what to add.
+Marketing fizzle
+You can build the perfect app and have it die because no one knows it exists. Treat marketing as half the project, not an afterthought.
+Burnout
+Two months is a long time on one project. Take breaks. Play golf. The app will still be there tomorrow.
+11. How You Know It Is Working
+Bad signs (fix immediately)
+* Users sign up but never come back
+* Rounds get started but never finished
+* Leaderboards stay empty after launch week
+* No one is asking the AI rules assistant any questions
+Good signs (keep going)
+* Users complete at least one full round
+* People add friends and play together
+* Returning users week over week
+* Users post about the app on their own social media
+Great signs (consider monetization)
+* Multiple groups using the app weekly
+* Users asking for more games to be added
+* Local courses or pro shops asking to be featured
+* 100 plus active users after one month
+12. Final Notes To Yourself
+This document is alive. Update it every week with what changed and what you learned. If something here turns out to be wrong, cross it out and replace it with the truth. The goal is not to follow this plan perfectly. The goal is to have a place to come back to when you forget where you are.
+Three things to remember when you get stuck or frustrated.
+63. Ship beats perfect. A live app with bugs beats a perfect app in your head.
+64. The boring parts are the project. Auth, databases, and bug fixes are the actual work, not the fun features you imagined.
+65. You are 14 and building a real app. Almost no one your age does this. Even a flop puts you years ahead of where you would be otherwise.
+Now go build it.
