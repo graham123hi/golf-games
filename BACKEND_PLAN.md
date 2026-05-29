@@ -1,6 +1,6 @@
 # Sandbagger — Backend Plan (Supabase)
 
-App: **Sandbagger** (also shown as "Golf Games"). Single `index.html` (vanilla HTML/CSS/JS),
+App: **Sandbagger** (the GitHub repo/URL is still `golf-games`). Single `index.html` (vanilla HTML/CSS/JS),
 hosted at https://graham123hi.github.io/golf-games — repo github.com/graham123hi/golf-games.
 Today everything saves to `localStorage` only.
 

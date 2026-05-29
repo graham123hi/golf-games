@@ -1,6 +1,6 @@
-// Golf Games service worker — makes the app installable and work offline.
+// Sandbagger service worker — makes the app installable and work offline.
 // Bump CACHE_VERSION whenever you change the files in APP_SHELL so phones pull the update.
-const CACHE_VERSION = 'golf-games-v1';
+const CACHE_VERSION = 'sandbagger-v2';
 const APP_SHELL = [
   './',
   './index.html',

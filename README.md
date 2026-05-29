@@ -1,4 +1,4 @@
-# Golf Games ⛳
+# Sandbagger ⛳
 
 A mobile-first app for tracking golf betting games with friends — skins, nassau, and custom games — with an AI rules assistant.
 

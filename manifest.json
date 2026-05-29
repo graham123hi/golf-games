@@ -1,6 +1,6 @@
 {
-  "name": "Golf Games",
-  "short_name": "Golf Games",
+  "name": "Sandbagger",
+  "short_name": "Sandbagger",
   "description": "Track golf betting games with friends — skins, nassau, and more.",
   "start_url": "./index.html",
   "scope": "./",

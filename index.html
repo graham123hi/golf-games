@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Golf Games</title>
+<title>Sandbagger</title>
 
 <!-- ── PWA: makes the app installable + offline ── -->
 <link rel="manifest" href="manifest.json">
@@ -13,7 +13,7 @@
 <!-- iOS home-screen app -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Golf Games">
+<meta name="apple-mobile-web-app-title" content="Sandbagger">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 <!-- favicons -->
@@ -467,7 +467,7 @@ body{font-family:var(--font-body);background:#e3e8e3;display:flex;justify-conten
 <div class="view visible active" id="view-splash" style="z-index:50;background:var(--splash-a)">
   <img class="splash-img" src="https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?auto=format&fit=crop&w=900&q=80" alt="" onerror="this.style.display='none'">
   <div class="splash-content">
-    <div class="splash-title">Golf Games</div>
+    <div class="splash-title">Sandbagger</div>
     <div class="splash-sub">Play smarter. Win more.</div>
     <div class="splash-loader"><div class="splash-loader-bar"></div></div>
   </div>
@@ -476,8 +476,8 @@ body{font-family:var(--font-body);background:#e3e8e3;display:flex;justify-conten
 <!-- AUTH WELCOME -->
 <div class="view" id="view-auth-welcome">
   <div class="auth-wrap">
-    <div class="auth-logo">GG</div>
-    <div class="auth-title">Golf Games</div>
+    <div class="auth-logo">SB</div>
+    <div class="auth-title">Sandbagger</div>
     <div class="auth-sub">Rules, scorecards &amp; virtual chips</div>
     <div class="auth-form">
       <button class="auth-btn" onclick="goAuth('signup')">Create Account</button>
@@ -490,7 +490,7 @@ body{font-family:var(--font-body);background:#e3e8e3;display:flex;justify-conten
 <div class="view" id="view-auth-signin">
   <div class="auth-wrap">
     <button class="auth-back" onclick="goAuth('welcome')">‹</button>
-    <div class="auth-logo">GG</div>
+    <div class="auth-logo">SB</div>
     <div class="auth-title">Welcome back</div>
     <div class="auth-sub">Sign in to your account</div>
     <div class="auth-form">
@@ -509,7 +509,7 @@ body{font-family:var(--font-body);background:#e3e8e3;display:flex;justify-conten
 <div class="view" id="view-auth-signup">
   <div class="auth-wrap" style="overflow-y:auto">
     <button class="auth-back" onclick="goAuth('welcome')">‹</button>
-    <div class="auth-logo">GG</div>
+    <div class="auth-logo">SB</div>
     <div class="auth-title">Create Account</div>
     <div class="auth-sub">Join the game</div>
     <div class="auth-form">
@@ -533,7 +533,7 @@ body{font-family:var(--font-body);background:#e3e8e3;display:flex;justify-conten
       <img src="https://images.unsplash.com/photo-1587174486073-ae5e5cff23aa?auto=format&fit=crop&w=900&q=80" alt="Golf course" onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(160deg,#0a3d2e,#1a6b40)'">
       <div class="hero-overlay"></div>
       <div class="hero-chips" id="chip-display">1,000 chips</div>
-      <div class="hero-text"><h1>Golf Games</h1><p>Rules, scorecards &amp; live scoring</p></div>
+      <div class="hero-text"><h1>Sandbagger</h1><p>Rules, scorecards &amp; live scoring</p></div>
     </div>
     <div class="surface">
       <!-- About -->
@@ -1450,7 +1450,7 @@ function addByGhin(){
   // Search all local accounts for a matching GHIN number
   const found=Object.values(accounts).find(a=>a.ghinNumber===val);
   if(!found){
-    alert('No Golf Games user found with GHIN #'+val+' on this device.\n\nAsk your friend to:\n1. Open Golf Games\n2. Go to Profile\n3. Enter their GHIN number\n\nOnce a backend is live, this will search all registered players.');
+    alert('No Sandbagger user found with GHIN #'+val+' on this device.\n\nAsk your friend to:\n1. Open Sandbagger\n2. Go to Profile\n3. Enter their GHIN number\n\nOnce a backend is live, this will search all registered players.');
     return;
   }
   if(found.username===currentUser){alert('That\'s your own GHIN number!');return;}
